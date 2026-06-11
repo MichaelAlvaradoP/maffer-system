@@ -69,18 +69,23 @@ if ( file_exists( MAFFER_SYSTEM_DIR . 'vendor/plugin-update-checker/plugin-updat
 /*
  * ── Module Load Order (completed WOs) ──────────────────────────
  *
- * WO-002: modules/panel-core.php   — Roles, menu, redirects, cron, POST handlers, XLSX, email
- * WO-004: modules/ajax-rut.php     — AJAX RUT validation
- * WO-004: modules/form.php         — Form shortcode & AJAX submit
- * WO-005: modules/panel-ajax.php   — Panel 7B AJAX (soft-delete)
- * WO-007: modules/login.php        — Login visual customizations
- * WO-007: modules/page-404.php     — Custom 404 page
+ * Order matters: includes/excel.php and includes/email.php must load
+ * BEFORE modules/panel-core.php because the cron handler and toggle
+ * handler call maffer_enviar_resumen() from email.php.
+ *
+ * WO-002: modules/panel-core.php     — Roles, menu, redirects, cron, POST handlers
+ * WO-003: includes/excel.php         — XLSX generation (maffer_generar_xlsx)
+ * WO-003: includes/email.php         — Email SUMMARY + DETAILED handlers
+ * WO-003: modules/panel-csv.php      — XLSX download (admin-post)
+ * WO-004: modules/ajax-rut.php       — AJAX RUT validation
+ * WO-004: modules/form.php           — Form shortcode & AJAX submit
+ * WO-005: modules/panel-ajax.php     — Panel 7B AJAX (soft-delete)
+ * WO-007: modules/login.php          — Login visual customizations
+ * WO-007: modules/page-404.php       — Custom 404 page
  *
  * ── Future Modules (to be migrated in pending WOs) ────────────
  *
- * modules/module-csv.php           — CSV/Excel export
- * modules/module-render.php        — Panel render
- * modules/module-email.php         — Email handling
+ * modules/module-render.php          — Panel render
  *
  * See README.md for the module migration plan.
  */

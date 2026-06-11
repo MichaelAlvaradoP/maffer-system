@@ -2,8 +2,15 @@
 /**
  * Maffer System — Module: Panel Core
  *
- * Roles, admin menu, cron, POST handlers, XLSX export, email functions.
+ * Roles, admin menu, cron, POST handlers, logout/redirect utilities.
  * Migrated from WPCode snippet 155 (Panel 7A — Roles y Menú).
+ *
+ * ## Related modules
+ *
+ * - `includes/excel.php` — `maffer_generar_xlsx()` (extracted from this file)
+ * - `includes/email.php`  — `maffer_html_correo()`, `maffer_enviar_resumen()`,
+ *                            `maffer_admin_enviar_correo_detalle()` (DETAILED email)
+ * - `modules/panel-csv.php` — `admin_post_maffer_descargar_excel` (CSV/Excel download)
  *
  * ## Function inventory
  *
@@ -17,14 +24,10 @@
  * | `maffer_clean_admin_bar()` | Remove admin bar nodes for gestores |
  * | `maffer_login_redirect()` | Redirect gestores after login |
  * | `maffer_aplicar_horario()` | Cron callback: auto open/close schedule |
- * | `maffer_generar_xlsx()` | Generate XLSX export in-memory |
- * | `maffer_html_correo()` | Build HTML email body |
- * | `maffer_enviar_resumen()` | Send summary email with XLSX attachment |
  * | `maffer_v6_procesar()` | Legacy POST fallback (called from panel-render) |
  * | `maffer_admin_guardar_menus()` | Admin-post: save menus |
  * | `maffer_admin_toggle_dia()` | Admin-post: open/close system |
  * | `maffer_admin_guardar_horario()` | Admin-post: save schedule config |
- * | `maffer_admin_enviar_correo()` | Admin-post: send manual email |
  * | `maffer_skip_logout_confirmation()` | Skip WP logout confirmation |
  * | `maffer_ajax_cambiar_password()` | AJAX: change gestor password |
  *
@@ -310,253 +313,10 @@ if ( ! function_exists( 'maffer_aplicar_horario' ) ) {
 	}
 }
 
-// ════════════════════════════════════════════════════════════════
-// 9. XLSX GENERATION (in-memory via ZipArchive + raw XML)
-// ════════════════════════════════════════════════════════════════
-
-if ( ! function_exists( 'maffer_generar_xlsx' ) ) {
-	/**
-	 * Generate an XLSX file in the system temp directory using raw
-	 * OpenXML spreadsheet XML plus a ZIP wrapper (no library needed).
-	 *
-	 * Columns: Nombre, RUT, Menu, Observaciones, Hora, Fecha.
-	 *
-	 * @param array  $rows  Array of associative arrays with keys:
-	 *                      nombre, rut, menu_titulo, observaciones, hora, fecha.
-	 * @param string $label Label for the temp filename.
-	 * @return string|false Path to the generated temp file, or false on failure.
-	 */
-	function maffer_generar_xlsx( $rows, $label ) {
-		$cabeceras  = array( 'Nombre', 'RUT', 'Menu', 'Observaciones', 'Hora', 'Fecha' );
-		$col_letras = array( 'A', 'B', 'C', 'D', 'E', 'F' );
-
-		$strings = array();
-		$str_idx = array();
-		$agregar = function( $v ) use ( &$strings, &$str_idx ) {
-			$v = (string) $v;
-			if ( ! isset( $str_idx[ $v ] ) ) {
-				$str_idx[ $v ] = count( $strings );
-				$strings[]     = $v;
-			}
-			return $str_idx[ $v ];
-		};
-
-		$filas_xl = array();
-		$cab_idx  = array();
-		foreach ( $cabeceras as $c ) {
-			$cab_idx[] = $agregar( $c );
-		}
-		foreach ( $rows as $r ) {
-			$fi   = array();
-			$fi[] = $agregar( $r['nombre'] );
-			$fi[] = $agregar( $r['rut'] );
-			$fi[] = $agregar( $r['menu_titulo'] );
-			$fi[] = $agregar( isset( $r['observaciones'] ) ? $r['observaciones'] : '' );
-			$fi[] = $agregar( substr( $r['hora'], 0, 5 ) );
-			$fi[] = $agregar( isset( $r['fecha'] ) ? $r['fecha'] : '' );
-			$filas_xl[] = $fi;
-		}
-
-		$sheet  = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
-		$sheet .= '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>';
-		$sheet .= '<row r="1">';
-		foreach ( $cab_idx as $ci => $si ) {
-			$sheet .= '<c r="' . $col_letras[ $ci ] . '1" t="s"><v>' . $si . '</v></c>';
-		}
-		$sheet .= '</row>';
-		foreach ( $filas_xl as $ri => $fila ) {
-			$rn = $ri + 2;
-			$sheet .= '<row r="' . $rn . '">';
-			foreach ( $fila as $ci => $si ) {
-				$sheet .= '<c r="' . $col_letras[ $ci ] . $rn . '" t="s"><v>' . $si . '</v></c>';
-			}
-			$sheet .= '</row>';
-		}
-		$sheet .= '</sheetData></worksheet>';
-
-		$sst  = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
-		$sst .= '<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="' . count( $strings ) . '" uniqueCount="' . count( $strings ) . '">';
-		foreach ( $strings as $s ) {
-			$sst .= '<si><t>' . htmlspecialchars( $s, ENT_XML1, 'UTF-8' ) . '</t></si>';
-		}
-		$sst .= '</sst>';
-
-		$wb  = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
-		$wb .= '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">';
-		$wb .= '<sheets><sheet name="Registros" sheetId="1" r:id="rId1"/></sheets></workbook>';
-
-		$ct  = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
-		$ct .= '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">';
-		$ct .= '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>';
-		$ct .= '<Default Extension="xml" ContentType="application/xml"/>';
-		$ct .= '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>';
-		$ct .= '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>';
-		$ct .= '<Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>';
-		$ct .= '</Types>';
-
-		$rels  = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
-		$rels .= '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">';
-		$rels .= '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>';
-		$rels .= '</Relationships>';
-
-		$wbrels  = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
-		$wbrels .= '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">';
-		$wbrels .= '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>';
-		$wbrels .= '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>';
-		$wbrels .= '</Relationships>';
-
-		$tmp = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'maffer_' . $label . '_' . time() . '.xlsx';
-		$zip = new ZipArchive();
-		if ( $zip->open( $tmp, ZipArchive::CREATE | ZipArchive::OVERWRITE ) !== true ) {
-			return false;
-		}
-		$zip->addFromString( '[Content_Types].xml',        $ct );
-		$zip->addFromString( '_rels/.rels',                $rels );
-		$zip->addFromString( 'xl/workbook.xml',            $wb );
-		$zip->addFromString( 'xl/_rels/workbook.xml.rels', $wbrels );
-		$zip->addFromString( 'xl/worksheets/sheet1.xml',   $sheet );
-		$zip->addFromString( 'xl/sharedStrings.xml',       $sst );
-		$zip->close();
-
-		return $tmp;
-	}
-}
-
-// ════════════════════════════════════════════════════════════════
-// 10. EMAIL HTML TEMPLATE
-// ════════════════════════════════════════════════════════════════
-
-if ( ! function_exists( 'maffer_html_correo' ) ) {
-	/**
-	 * Build the HTML email body with a summary table of menu distribution.
-	 *
-	 * @param array  $rows      Array of reservation records.
-	 * @param string $rango_fmt Formatted date range (e.g. "2026-06-06 al 11/06/2026").
-	 * @return string Complete HTML document string.
-	 */
-	function maffer_html_correo( $rows, $rango_fmt ) {
-		$total = count( $rows );
-		$dist  = array();
-
-		foreach ( $rows as $r ) {
-			$t = ! empty( $r['menu_titulo'] ) ? $r['menu_titulo'] : 'Sin titulo';
-			$dist[ $t ] = isset( $dist[ $t ] ) ? $dist[ $t ] + 1 : 1;
-		}
-
-		$filas_dist = '';
-		foreach ( $dist as $nm => $cnt ) {
-			$filas_dist .= '<tr>'
-				. '<td style="padding:10px 16px;border-bottom:1px solid #f0e8d8;color:#2a231a">' . esc_html( $nm ) . '</td>'
-				. '<td style="padding:10px 16px;border-bottom:1px solid #f0e8d8;text-align:center;font-weight:700;color:#E67E22;font-size:18px">' . intval( $cnt ) . '</td>'
-				. '</tr>';
-		}
-
-		return '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>'
-			. '<div style="font-family:Arial,sans-serif;font-size:13px;color:#2a231a;max-width:560px;margin:0 auto">'
-			. '<div style="background:#E67E22;padding:24px 28px;border-radius:12px 12px 0 0">'
-			. '<h1 style="margin:0;color:#fff;font-size:20px;font-weight:700">Servicio de Alimentacion Maffer</h1>'
-			. '<p style="margin:6px 0 0;color:rgba(255,255,255,.85);font-size:13px">Resumen del ciclo &mdash; Servicio de Cena</p>'
-			. '</div>'
-			. '<div style="background:#fffaf1;border:1px solid #e6d8bf;border-top:0;padding:24px 28px;border-radius:0 0 12px 12px">'
-			. '<p style="margin:0 0 20px;font-size:13px;color:#6b5d4c">Buen dia, se adjunta el detalle completo en el archivo Excel. Aqui el resumen del ciclo <strong>' . esc_html( $rango_fmt ) . '</strong>:</p>'
-			. '<table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;border:1px solid #e6d8bf;border-radius:10px;overflow:hidden;font-size:13px;margin-bottom:20px">'
-			. '<thead><tr style="background:#fbf3e4">'
-			. '<th style="padding:10px 16px;text-align:left;color:#97897a;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e6d8bf">Menu</th>'
-			. '<th style="padding:10px 16px;text-align:center;color:#97897a;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e6d8bf">Cantidad</th>'
-			. '</tr></thead>'
-			. '<tbody>'
-			. $filas_dist
-			. '<tr style="background:#fff8f0">'
-			. '<td style="padding:12px 16px;font-weight:700;color:#2a231a;border-top:2px solid #e6d8bf">Total registros</td>'
-			. '<td style="padding:12px 16px;text-align:center;font-weight:800;color:#E67E22;font-size:22px;border-top:2px solid #e6d8bf">' . intval( $total ) . '</td>'
-			. '</tr>'
-			. '</tbody></table>'
-			. '<p style="margin:0;color:#97897a;font-size:11px;border-top:1px solid #e6d8bf;padding-top:16px">Sistema de Alimentacion Maffer &mdash; ' . esc_html( $rango_fmt ) . '</p>'
-			. '</div></div></body></html>';
-	}
-}
-
-// ════════════════════════════════════════════════════════════════
-// 11. SEND SUMMARY EMAIL WITH XLSX ATTACHMENT
-// ════════════════════════════════════════════════════════════════
-
-if ( ! function_exists( 'maffer_enviar_resumen' ) ) {
-	/**
-	 * Fetch records for the current cycle, generate an XLSX file,
-	 * and email it to the configured destination address.
-	 *
-	 * @param string $asunto Email subject line.
-	 * @return bool True if email was sent successfully.
-	 *
-	 * ## Known Issue: remove_filter with anonymous closure
-	 *
-	 * The original snippet 155 uses an anonymous closure for
-	 * `add_filter('wp_mail_content_type', ...)` and then attempts
-	 * `remove_filter()` with a *new* anonymous closure instance.
-	 * Because PHP compares closures by instance (not by code),
-	 * the remove_filter call is a no-op — the filter remains in place.
-	 *
-	 * In practice, `wp_mail()` resets the content type internally for
-	 * each call, so the bug has not caused observable side effects.
-	 * It is left as-is for behavioral identity with the original.
-	 *
-	 * @see https://www.php.net/manual/en/function.spl-object-id.php
-	 */
-	function maffer_enviar_resumen( $asunto ) {
-		$tz      = new DateTimeZone( 'America/Santiago' );
-		$dt      = new DateTime( 'now', $tz );
-		$hoy     = $dt->format( 'Y-m-d' );
-		$hoy_fmt = $dt->format( 'd/m/Y' );
-
-		$fecha_ciclo = maffer_get_fecha_ciclo();
-		$label       = $fecha_ciclo ? $fecha_ciclo . '_a_' . $hoy : $hoy;
-		$rango_fmt   = $fecha_ciclo && $fecha_ciclo !== $hoy
-			? $fecha_ciclo . ' al ' . $hoy_fmt
-			: $hoy_fmt;
-
-		global $wpdb;
-		$tabla = $wpdb->prefix . 'maffer_registros';
-
-		if ( $fecha_ciclo ) {
-			$rows = $wpdb->get_results(
-				$wpdb->prepare(
-					"SELECT nombre, rut, menu_titulo, observaciones, hora, fecha FROM {$tabla} WHERE fecha >= %s ORDER BY fecha ASC, id ASC",
-					$fecha_ciclo
-				),
-				ARRAY_A
-			);
-		} else {
-			$rows = $wpdb->get_results(
-				$wpdb->prepare(
-					"SELECT nombre, rut, menu_titulo, observaciones, hora, fecha FROM {$tabla} WHERE fecha = %s ORDER BY id ASC",
-					$hoy
-				),
-				ARRAY_A
-			);
-		}
-
-		$dest     = get_option( 'maffer_correo_destino', 'administracion.maffer@gmail.com' );
-		$tmp_xlsx = maffer_generar_xlsx( $rows, $label );
-
-		if ( ! $tmp_xlsx ) {
-			return false;
-		}
-
-		$html = maffer_html_correo( $rows, $rango_fmt );
-		add_filter( 'wp_mail_content_type', function() { return 'text/html'; } );
-
-		/**
-		 * NOTE: The remove_filter below uses a new anonymous closure instance.
-		 * This does NOT remove the filter added above. See the docblock for details.
-		 */
-		$enviado = wp_mail( $dest, $asunto, $html, array( 'Content-Type: text/html; charset=UTF-8' ), array( $tmp_xlsx ) );
-		remove_filter( 'wp_mail_content_type', function() { return 'text/html'; } );
-
-		@unlink( $tmp_xlsx );
-
-		return $enviado;
-	}
-}
+// NOTE: Sections 9 (XLSX), 10 (Email HTML), and 11 (Send Summary Email)
+// have been moved to:
+//   includes/excel.php  — maffer_generar_xlsx()
+//   includes/email.php   — maffer_html_correo(), maffer_enviar_resumen()
 
 // ════════════════════════════════════════════════════════════════
 // 12. LEGACY POST FALLBACK
@@ -784,39 +544,9 @@ if ( ! function_exists( 'maffer_admin_guardar_horario' ) ) {
 	}
 }
 
-// ════════════════════════════════════════════════════════════════
-// 16. ADMIN-POST: ENVIAR CORREO MANUAL
-// ════════════════════════════════════════════════════════════════
-
-add_action( 'admin_post_maffer_enviar_correo', 'maffer_admin_enviar_correo' );
-
-if ( ! function_exists( 'maffer_admin_enviar_correo' ) ) {
-	/**
-	 * Handle admin-post action: manually send the summary email.
-	 */
-	function maffer_admin_enviar_correo() {
-		if ( ! current_user_can( 'maffer_manage_menu' ) && ! current_user_can( 'manage_options' ) ) {
-			wp_die( 'Sin permisos.' );
-		}
-		check_admin_referer( 'maffer_admin_action' );
-
-		$tz      = new DateTimeZone( 'America/Santiago' );
-		$dt      = new DateTime( 'now', $tz );
-		$hoy_fmt = $dt->format( 'd/m/Y' );
-
-		$asunto = 'Resumen ciclo Maffer ' . $hoy_fmt . ' — Servicio de Cena';
-
-		if ( ! function_exists( 'maffer_enviar_resumen' ) ) {
-			wp_redirect( admin_url( 'admin.php?page=maffer-panel&msg=correo_error' ) );
-			exit;
-		}
-
-		$enviado = maffer_enviar_resumen( $asunto );
-		$msg     = $enviado ? 'correo_ok' : 'correo_error';
-		wp_redirect( admin_url( 'admin.php?page=maffer-panel&msg=' . $msg ) );
-		exit;
-	}
-}
+// NOTE: Section 16 (Admin-post: manual email) has been replaced by the
+// DETAILED handler in includes/email.php (maffer_admin_enviar_correo_detalle).
+// The SUMMARY handler is still used by cron auto-close and toggle-dia.
 
 // ════════════════════════════════════════════════════════════════
 // 17. SKIP LOGOUT CONFIRMATION
