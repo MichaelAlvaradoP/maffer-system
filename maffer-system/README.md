@@ -16,14 +16,43 @@ Reemplaza los 9 snippets activos de WPCode por un plugin estructurado y modular.
 maffer-system/
 ├── maffer-system.php          # Main plugin — loader, hooks, update checker
 ├── includes/
-│   ├── helpers.php            # Shared utility functions (extracted from snippets 155, 158)
 │   ├── activator.php          # Activation: table schema, roles, cron scheduling
-│   └── deactivator.php        # Deactivation: cron cleanup, flush rewrite
+│   ├── deactivator.php        # Deactivation: cron cleanup, flush rewrite
+│   ├── email.php              # Email handling (Snippet 156)
+│   ├── excel.php              # XLSX generation (Snippet 159)
+│   └── helpers.php            # Shared utility functions (Snippet 155, 158)
+├── modules/
+│   ├── ajax-rut.php           # RUT validation (Snippet 138)
+│   ├── form.php               # Form shortcode (Snippet 140)
+│   ├── login.php              # Login customization (Snippet 160)
+│   ├── page-404.php           # Custom 404 page (Snippet 164)
+│   ├── panel-ajax.php         # AJAX handlers (Snippet 157)
+│   ├── panel-core.php         # Panel core (Snippet 161)
+│   ├── panel-csv.php          # CSV/Excel download (Snippet 159)
+│   └── panel-render.php       # Panel render (Snippet 158)
 ├── vendor/
 │   └── plugin-update-checker/ # YahnisElsts/plugin-update-checker v5.7
-├── modules/                   # Created in future WOs
 └── README.md
 ```
+
+---
+
+## Module Mapping
+
+| Module File | Source Snippet(s) | Key Functions |
+| :--- | :--- | :--- |
+| `includes/activator.php` | 137 | `maffer_activar_plugin` |
+| `includes/email.php` | 156 | `maffer_html_correo`, `maffer_enviar_resumen` |
+| `includes/excel.php` | 159 | `maffer_generar_xlsx` |
+| `includes/helpers.php` | 155, 158 | `maffer_fmt_ciclo_date`, `maffer_get_menus` |
+| `modules/ajax-rut.php` | 138 | `maffer_ajax_validar_rut` |
+| `modules/form.php` | 140 | `maffer_formulario_shortcode` |
+| `modules/login.php` | 160 | `maffer_login_logo_url`, `maffer_login_head_css` |
+| `modules/page-404.php` | 164 | `maffer_custom_404_template` |
+| `modules/panel-ajax.php` | 157 | `maffer_editar_registro`, `maffer_eliminar_registro` |
+| `modules/panel-core.php` | 161 | `maffer_admin_menu`, `maffer_admin_page` |
+| `modules/panel-csv.php` | 159 | `maffer_admin_descargar_excel` |
+| `modules/panel-render.php` | 158 | `maffer_v6_render` |
 
 ---
 
@@ -40,68 +69,13 @@ maffer-system/
 
 ---
 
-## Module Migration Plan
-
-The 9 snippets are being migrated one module at a time. Each module matches one or more original WPCode snippets.
-
-| WO    | Module / File               | Source Snippet(s)         | Status   |
-|-------|-----------------------------|---------------------------|----------|
-| —     | `includes/helpers.php`      | 155, 158                  | ✅ Done  |
-| —     | `includes/activator.php`    | 137                       | ✅ Done  |
-| —     | `includes/deactivator.php`  | —                         | ✅ Done  |
-| WO-002 | `modules/module-roles-menu.php` | 155 (roles, menu, redirects) | ⏳ Pending |
-| WO-003 | `modules/module-ajax.php`       | 157 (AJAX handlers)          | ⏳ Pending |
-| WO-004 | `modules/module-csv.php`        | 159 (CSV/Excel export)       | ⏳ Pending |
-| WO-005 | `modules/module-form.php`       | 140 (shortcode formulario)   | ⏳ Pending |
-| WO-006 | `modules/module-render.php`     | 158 (panel render)           | ⏳ Pending |
-| WO-007 | `modules/module-email.php`      | 156 (email handling)         | ⏳ Pending |
-| WO-008 | `modules/module-rut-ajax.php`   | 138 (RUT validation)         | ⏳ Pending |
-| WO-009 | `modules/module-login-visual.php` | 160 (login customization)  | ⏳ Pending |
-| WO-010 | `modules/module-404.php`        | 164 (404 page)               | ⏳ Pending |
-
----
-
-## Database
-
-**Table:** `{prefix}_maffer_registros`
-
-| Column        | Type                | Notes                     |
-|---------------|---------------------|---------------------------|
-| id            | BIGINT(20) UNSIGNED | Auto-increment, primary    |
-| nombre        | VARCHAR(150)        | Guest name                 |
-| rut           | VARCHAR(15)         | Chilean RUT (PII)          |
-| turno         | VARCHAR(20)         | Default 'almuerzo'         |
-| menu_titulo   | VARCHAR(200)        | Menu title                 |
-| menu_desc     | TEXT                | Menu description           |
-| observaciones | TEXT                | Notes                      |
-| fecha         | DATE                | Reservation date           |
-| hora          | TIME                | Reservation time           |
-| estado_dia    | VARCHAR(20)         | Default 'abierto'          |
-| deleted_at    | DATETIME            | Soft-delete (NULL = alive) |
-
-**Index:** `idx_rut_fecha` on `(rut, fecha)`.
-
----
-
 ## Update Mechanism
 
-This plugin uses [YahnisElsts/plugin-update-checker](https://github.com/YahnisElsts/plugin-update-checker) v5.7  
-to check for updates via GitHub Releases.
+This plugin uses [YahnisElsts/plugin-update-checker](https://github.com/YahnisElsts/plugin-update-checker) v5.7 to check for updates via GitHub Releases.
 
 1. Create a new release on GitHub with a version tag (e.g., `v1.1.0`).
 2. The `GitHub URI` plugin header points to the repository.
 3. WordPress will check for updates every 12 hours by default.
-
----
-
-## Users & Roles
-
-| Role                     | Capability          | Description                  |
-|--------------------------|---------------------|------------------------------|
-| gestor_menus_maffer      | maffer_manage_menu  | Full panel access (v1 name)  |
-| gestor_menus             | maffer_manage_menu  | Full panel access (v5 name)  |
-
-Administrators (`manage_options`) also have full access.
 
 ---
 
@@ -118,18 +92,9 @@ To fully roll back:
 
 ---
 
-## Development
+## Known Issues / Technical Debt
 
-### Adding a new module
-
-1. Create the file in `modules/module-{name}.php`.
-2. Add the `require_once` line in `maffer-system.php` under the module placeholders comment.
-3. All functions must be wrapped in `if ( ! function_exists() )` guards.
-
-### Coding standards
-
-- All DB queries use `$wpdb->prepare()` — no string concatenation.
-- Input sanitization at the boundary (first entry point).
-- Output escaped with `esc_html()`, `esc_attr()`, `esc_js()`, etc.
-- Capability checks on every state-changing action.
-- Soft-delete enabled — never hard-delete from the database.
+- **`remove_filter` bug**: `remove_filter` with anonymous closure is documented but not functional (no-op).
+- **Legacy Compatibility**: `maffer_v6_procesar()` is kept as a POST fallback for compatibility.
+- **CSS/JS**: Currently inline; extraction to separate files is planned for Phase 2.
+- **Soft-delete**: Records are marked with `deleted_at` instead of physically deleted.
