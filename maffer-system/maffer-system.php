@@ -40,6 +40,7 @@ require_once MAFFER_SYSTEM_DIR . 'modules/ajax-rut.php';    // WO-004 — AJAX R
 require_once MAFFER_SYSTEM_DIR . 'modules/form.php';        // WO-004 — Form shortcode & AJAX submit
 require_once MAFFER_SYSTEM_DIR . 'modules/login.php';       // WO-007 — Login visual customizations
 require_once MAFFER_SYSTEM_DIR . 'modules/page-404.php';    // WO-007 — Custom 404 page
+require_once MAFFER_SYSTEM_DIR . 'modules/panel-render.php'; // WO-006 — Panel 7E Render (dashboard UI)
 
 // ── Activation / Deactivation Hooks ─────────────────────────────
 register_activation_hook( __FILE__, array( 'Maffer_Activator', 'activate' ) );
@@ -80,12 +81,9 @@ if ( file_exists( MAFFER_SYSTEM_DIR . 'vendor/plugin-update-checker/plugin-updat
  * WO-004: modules/ajax-rut.php       — AJAX RUT validation
  * WO-004: modules/form.php           — Form shortcode & AJAX submit
  * WO-005: modules/panel-ajax.php     — Panel 7B AJAX (soft-delete)
+ * WO-006: modules/panel-render.php   — Panel 7E Render (dashboard UI)
  * WO-007: modules/login.php          — Login visual customizations
  * WO-007: modules/page-404.php       — Custom 404 page
- *
- * ── Future Modules (to be migrated in pending WOs) ────────────
- *
- * modules/module-render.php          — Panel render
  *
  * See README.md for the module migration plan.
  */
