@@ -61,7 +61,7 @@ if ( ! function_exists( 'maffer_editar_registro' ) ) {
     }
 }
 add_action( 'wp_ajax_maffer_editar_registro', 'maffer_editar_registro' );
-add_action( 'wp_ajax_nopriv_maffer_editar_registro', 'maffer_editar_registro' );
+
 
 
 // ── ELIMINAR REGISTRO (soft-delete) ──────────────────────────────────────────
@@ -104,7 +104,7 @@ if ( ! function_exists( 'maffer_eliminar_registro' ) ) {
     }
 }
 add_action( 'wp_ajax_maffer_eliminar_registro', 'maffer_eliminar_registro' );
-add_action( 'wp_ajax_nopriv_maffer_eliminar_registro', 'maffer_eliminar_registro' );
+
 
 
 // ── CREAR REGISTRO (manual desde panel admin) ────────────────────────────────
@@ -199,4 +199,4 @@ if ( ! function_exists( 'maffer_crear_registro' ) ) {
     }
 }
 add_action( 'wp_ajax_maffer_crear_registro', 'maffer_crear_registro' );
-add_action( 'wp_ajax_nopriv_maffer_crear_registro', 'maffer_crear_registro' );
+
