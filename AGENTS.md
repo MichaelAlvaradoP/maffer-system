@@ -23,3 +23,10 @@
 - PROHIBIDO borrar registros/tablas (soft-delete) y desactivar snippets en sandbox sin WO que lo indique
 - Emails: el sandbox no envia correo real â€” probar logica de correo en modo log/test
 - Datos de huespedes = PII: jamas datos reales en codigo, tests o logs
+
+## Sandbox caido — auto-recuperacion (autorizado)
+Si http://127.0.0.1:8081 no responde, ANTES de reportar bloqueo:
+1. `docker ps --filter name=wp-sandbox-maffer` — si los contenedores no estan:
+2. `cd C:\Users\chest\AI-Ecosystem\wp-sandbox-maffer; docker compose up -d` y esperar ~20s (AUTORIZADO solo para ESTE stack del sandbox)
+3. Si docker mismo no responde (engine caido): NO intentar levantar Docker Desktop — reportar a Michael y pausar el WO.
+PROHIBIDO: up/down/restart de cualquier otro stack (openclaw, council, proxy, playwright = infraestructura del ecosistema, solo Michael/@devops con autorizacion).
