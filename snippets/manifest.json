@@ -1,0 +1,102 @@
+[
+  {
+    "id": 137,
+    "file": "137-fragmento-de-codigo-sin-titulo-2.php",
+    "title": "Crear tabla registro (Activación única)",
+    "active": false,
+    "code_type": "php",
+    "location": "",
+    "auto_insert": "1",
+    "priority": "10"
+  },
+  {
+    "id": 138,
+    "file": "138-fragmento-de-codigo-sin-titulo-3.php",
+    "title": "Ajax Validar Rut",
+    "active": true,
+    "code_type": "php",
+    "location": "",
+    "auto_insert": "1",
+    "priority": "10"
+  },
+  {
+    "id": 140,
+    "file": "140-formulario-personalizado-shortcode.php",
+    "title": "Formulario personalizado shortcode 6",
+    "active": true,
+    "code_type": "php",
+    "location": "",
+    "auto_insert": "1",
+    "priority": "10"
+  },
+  {
+    "id": 155,
+    "file": "155-maffer-panel-7a-roles-y-menu.php",
+    "title": "Maffer - Panel 7A Roles y Menú",
+    "active": true,
+    "code_type": "php",
+    "location": "",
+    "auto_insert": "1",
+    "priority": "10"
+  },
+  {
+    "id": 156,
+    "file": "156-maffer-panel-7c-render.php",
+    "title": "Maffer - Panel 7D Correo",
+    "active": true,
+    "code_type": "php",
+    "location": "",
+    "auto_insert": "1",
+    "priority": "10"
+  },
+  {
+    "id": 157,
+    "file": "157-maffer-panel-7b-ajax.php",
+    "title": "Maffer - Panel 7B Ajax",
+    "active": true,
+    "code_type": "php",
+    "location": "",
+    "auto_insert": "1",
+    "priority": "10"
+  },
+  {
+    "id": 158,
+    "file": "158-maffer-panel-7e-render.php",
+    "title": "Maffer - Panel 7E Render",
+    "active": true,
+    "code_type": "php",
+    "location": "",
+    "auto_insert": "1",
+    "priority": "10"
+  },
+  {
+    "id": 159,
+    "file": "159-maffer-panel-7c-csv.php",
+    "title": "Maffer - Panel 7C CSV",
+    "active": true,
+    "code_type": "php",
+    "location": "",
+    "auto_insert": "1",
+    "priority": "10"
+  },
+  {
+    "id": 160,
+    "file": "160-maffer-login-visual.php",
+    "title": "Maffer - Login Visual",
+    "active": true,
+    "code_type": "php",
+    "location": "",
+    "auto_insert": "1",
+    "priority": "10"
+  },
+  {
+    "id": 164,
+    "file": "164-pagina-404.php",
+    "title": "Página 404",
+    "active": true,
+    "code_type": "php",
+    "location": "",
+    "auto_insert": "1",
+    "priority": "10"
+  }
+]
