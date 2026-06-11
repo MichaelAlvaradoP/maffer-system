@@ -27,12 +27,19 @@ define( 'MAFFER_SYSTEM_DIR', plugin_dir_path( __FILE__ ) );
 // ── Includes ─────────────────────────────────────────────────────
 // Helpers first — other modules depend on these functions.
 require_once MAFFER_SYSTEM_DIR . 'includes/helpers.php';
+require_once MAFFER_SYSTEM_DIR . 'includes/excel.php';    // WO-003 — XLSX generation (maffer_generar_xlsx)
+require_once MAFFER_SYSTEM_DIR . 'includes/email.php';    // WO-003 — Email SUMMARY + DETAILED handlers
 require_once MAFFER_SYSTEM_DIR . 'includes/activator.php';
 require_once MAFFER_SYSTEM_DIR . 'includes/deactivator.php';
 
 // ── Modules ──────────────────────────────────────────────────────
 require_once MAFFER_SYSTEM_DIR . 'modules/panel-core.php';  // WO-002 — Roles, menu, redirects, cron, POST handlers
 require_once MAFFER_SYSTEM_DIR . 'modules/panel-ajax.php';  // WO-005 — Panel 7B AJAX (soft-delete)
+require_once MAFFER_SYSTEM_DIR . 'modules/panel-csv.php';   // WO-003 — XLSX download (admin_post_maffer_descargar_excel)
+require_once MAFFER_SYSTEM_DIR . 'modules/ajax-rut.php';    // WO-004 — AJAX RUT validation
+require_once MAFFER_SYSTEM_DIR . 'modules/form.php';        // WO-004 — Form shortcode & AJAX submit
+require_once MAFFER_SYSTEM_DIR . 'modules/login.php';       // WO-007 — Login visual customizations
+require_once MAFFER_SYSTEM_DIR . 'modules/page-404.php';    // WO-007 — Custom 404 page
 
 // ── Activation / Deactivation Hooks ─────────────────────────────
 register_activation_hook( __FILE__, array( 'Maffer_Activator', 'activate' ) );
@@ -63,17 +70,17 @@ if ( file_exists( MAFFER_SYSTEM_DIR . 'vendor/plugin-update-checker/plugin-updat
  * ── Module Load Order (completed WOs) ──────────────────────────
  *
  * WO-002: modules/panel-core.php   — Roles, menu, redirects, cron, POST handlers, XLSX, email
+ * WO-004: modules/ajax-rut.php     — AJAX RUT validation
+ * WO-004: modules/form.php         — Form shortcode & AJAX submit
+ * WO-005: modules/panel-ajax.php   — Panel 7B AJAX (soft-delete)
+ * WO-007: modules/login.php        — Login visual customizations
+ * WO-007: modules/page-404.php     — Custom 404 page
  *
  * ── Future Modules (to be migrated in pending WOs) ────────────
  *
- * require_once MAFFER_SYSTEM_DIR . 'modules/module-ajax.php';         // WO-003 — AJAX handlers
- * require_once MAFFER_SYSTEM_DIR . 'modules/module-csv.php';          // WO-004 — CSV/Excel export
- * require_once MAFFER_SYSTEM_DIR . 'modules/module-form.php';         // WO-005 — Shortcode form
- * require_once MAFFER_SYSTEM_DIR . 'modules/module-render.php';       // WO-006 — Panel render
- * require_once MAFFER_SYSTEM_DIR . 'modules/module-email.php';        // WO-007 — Email handling
- * require_once MAFFER_SYSTEM_DIR . 'modules/module-rut-ajax.php';     // WO-008 — RUT validation AJAX
- * require_once MAFFER_SYSTEM_DIR . 'modules/module-login-visual.php'; // WO-009 — Login customization
- * require_once MAFFER_SYSTEM_DIR . 'modules/module-404.php';          // WO-010 — 404 page
+ * modules/module-csv.php           — CSV/Excel export
+ * modules/module-render.php        — Panel render
+ * modules/module-email.php         — Email handling
  *
  * See README.md for the module migration plan.
  */
