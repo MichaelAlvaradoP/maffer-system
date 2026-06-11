@@ -30,6 +30,9 @@ require_once MAFFER_SYSTEM_DIR . 'includes/helpers.php';
 require_once MAFFER_SYSTEM_DIR . 'includes/activator.php';
 require_once MAFFER_SYSTEM_DIR . 'includes/deactivator.php';
 
+// ── Modules ─────────────────────────────────────────────────────
+require_once MAFFER_SYSTEM_DIR . 'modules/panel-ajax.php';      // WO-005 — Panel 7B AJAX (soft-delete)
+
 // ── Activation / Deactivation Hooks ─────────────────────────────
 register_activation_hook( __FILE__, array( 'Maffer_Activator', 'activate' ) );
 register_deactivation_hook( __FILE__, array( 'Maffer_Deactivator', 'deactivate' ) );
@@ -56,19 +59,18 @@ if ( file_exists( MAFFER_SYSTEM_DIR . 'vendor/plugin-update-checker/plugin-updat
 }
 
 /*
- * ── Module Placeholders (to be loaded in future WOs) ───────────
+ * ── Module Placeholders (remaining WOs) ─────────────────────────
  *
  * Modules will be loaded here in the following order:
  *
- * require_once MAFFER_SYSTEM_DIR . 'modules/module-roles-menu.php';   // WO-002 — Roles, menu, redirects
- * require_once MAFFER_SYSTEM_DIR . 'modules/module-ajax.php';         // WO-003 — AJAX handlers
- * require_once MAFFER_SYSTEM_DIR . 'modules/module-csv.php';          // WO-004 — CSV/Excel export
- * require_once MAFFER_SYSTEM_DIR . 'modules/module-form.php';         // WO-005 — Shortcode form
- * require_once MAFFER_SYSTEM_DIR . 'modules/module-render.php';       // WO-006 — Panel render
- * require_once MAFFER_SYSTEM_DIR . 'modules/module-email.php';        // WO-007 — Email handling
- * require_once MAFFER_SYSTEM_DIR . 'modules/module-rut-ajax.php';     // WO-008 — RUT validation AJAX
- * require_once MAFFER_SYSTEM_DIR . 'modules/module-login-visual.php'; // WO-009 — Login customization
- * require_once MAFFER_SYSTEM_DIR . 'modules/module-404.php';          // WO-010 — 404 page
+ * require_once MAFFER_SYSTEM_DIR . 'modules/module-roles-menu.php';   // WO-002 — Roles, menu, redirects  [PENDING]
+ * require_once MAFFER_SYSTEM_DIR . 'modules/module-ajax.php';         // WO-003 — AJAX handlers             [PENDING]
+ * require_once MAFFER_SYSTEM_DIR . 'modules/module-csv.php';          // WO-004 — CSV/Excel export           [PENDING]
+ * require_once MAFFER_SYSTEM_DIR . 'modules/module-render.php';       // WO-006 — Panel render               [PENDING]
+ * require_once MAFFER_SYSTEM_DIR . 'modules/module-email.php';        // WO-007 — Email handling             [PENDING]
+ * require_once MAFFER_SYSTEM_DIR . 'modules/module-rut-ajax.php';     // WO-008 — RUT validation AJAX        [PENDING]
+ * require_once MAFFER_SYSTEM_DIR . 'modules/module-login-visual.php'; // WO-009 — Login customization         [PENDING]
+ * require_once MAFFER_SYSTEM_DIR . 'modules/module-404.php';          // WO-010 — 404 page                   [PENDING]
  *
- * See README.md for the module migration plan.
+ * ✓ WO-005 complete: modules/panel-ajax.php (Panel 7B AJAX con soft-delete)
  */
