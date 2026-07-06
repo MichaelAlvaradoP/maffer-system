@@ -1,14 +1,14 @@
 <?php
 /**
- * Maffer System â€” Module: Panel Render (7E)
+ * Maffer System — Module: Panel Render (7E)
  *
- * Admin panel HTML/CSS/JS rendering â€” the main dashboard UI.
+ * Admin panel HTML/CSS/JS rendering — the main dashboard UI.
  * Migrated from WPCode snippet 158 (Maffer - Panel 7E Render).
  *
  * ## Dependencies (loaded BEFORE this module)
- * - helpers.php       â†’ maffer_fmt_ciclo_date(), maffer_compute_this_week_dt(), etc.
- * - panel-core.php    â†’ maffer_v6_procesar(), maffer_aplicar_horario(), etc.
- * - panel-ajax.php    â†’ AJAX handlers for create/edit/delete
+ * - helpers.php       → maffer_fmt_ciclo_date(), maffer_compute_this_week_dt(), etc.
+ * - panel-core.php    → maffer_v6_procesar(), maffer_aplicar_horario(), etc.
+ * - panel-ajax.php    → AJAX handlers for create/edit/delete
  *
  * ## Function inventory
  * | Function | Purpose |
@@ -41,7 +41,7 @@ function maffer_v6_render() {
 
     maffer_v6_procesar();
 
-    // â”€â”€ Datos generales â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── Datos generales ─────────────────────────────────────
     $tz      = new DateTimeZone( 'America/Santiago' );
     $ahora   = new DateTime( 'now', $tz );
     $hoy     = $ahora->format( 'Y-m-d' );
@@ -63,19 +63,19 @@ function maffer_v6_render() {
 
     // Horario recurrente semanal
     $dias_semana = array(
-        0 => 'Domingo', 1 => 'Lunes', 2 => 'Martes', 3 => 'MiÃ©rcoles',
-        4 => 'Jueves',  5 => 'Viernes', 6 => 'SÃ¡bado',
+        0 => 'Domingo', 1 => 'Lunes', 2 => 'Martes', 3 => 'Miércoles',
+        4 => 'Jueves',  5 => 'Viernes', 6 => 'Sábado',
     );
     $dias_semana_es = array(
-        0 => 'domingo', 1 => 'lunes', 2 => 'martes', 3 => 'miÃ©rcoles',
-        4 => 'jueves',  5 => 'viernes', 6 => 'sÃ¡bado',
+        0 => 'domingo', 1 => 'lunes', 2 => 'martes', 3 => 'miércoles',
+        4 => 'jueves',  5 => 'viernes', 6 => 'sábado',
     );
     $ap_dia  = (int) get_option( 'maffer_apertura_dia',  6 );
     $ap_hora = get_option( 'maffer_apertura_hora', '12:00' );
     $cl_dia  = (int) get_option( 'maffer_cierre_dia',   0 );
     $cl_hora = get_option( 'maffer_cierre_hora', '18:00' );
 
-    // Calcular prÃ³ximo ciclo para mostrar en el panel
+    // Calcular próximo ciclo para mostrar en el panel
     $proximo_ap_dt = null;
     $proximo_cl_dt = null;
     $proximo_ap_fmt = '';
@@ -91,14 +91,14 @@ function maffer_v6_render() {
                         . ' ' . $proximo_cl_dt->format('j/m') . ' ' . $cl_hora;
     }
 
-    // Mantener compatibilidad con cÃ³digo que usa $apertura_programada
+    // Mantener compatibilidad con código que usa $apertura_programada
     $apertura_programada = ''; // ya no se usa como datetime-local
 
     // Fecha de inicio del ciclo
     $fecha_ciclo = function_exists( 'maffer_get_fecha_ciclo' ) ? maffer_get_fecha_ciclo() : null;
     $fecha_desde = $fecha_ciclo ?: $hoy;
 
-    // Correo y menÃºs (solo Cena)
+    // Correo y menús (solo Cena)
     $correo     = get_option( 'maffer_correo_destino', get_option( 'admin_email' ) );
     $menus_cena = get_option( 'maffer_menu_cena', array() );
     if ( empty( $menus_cena ) ) {
@@ -359,13 +359,13 @@ function maffer_v6_render() {
                             style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;color:#6b5d4c;font-size:13px;font-weight:600;transition:background .12s;background:transparent;border:0;width:100%;cursor:pointer;font-family:inherit"
                             onmouseover="this.style.background='#fdf1e5'" onmouseout="this.style.background='transparent'">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg>
-                            Cambiar contraseÃ±a
+                            Cambiar contraseña
                         </button>
                         <a href="<?php echo esc_url( wp_logout_url( home_url() ) ); ?>"
                             style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;text-decoration:none;color:#b94a32;font-size:13px;font-weight:600;transition:background .12s"
                             onmouseover="this.style.background='#fbebe6'" onmouseout="this.style.background='transparent'">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                            Cerrar sesiÃ³n
+                            Cerrar sesión
                         </a>
                     </div>
                 </div>
@@ -378,7 +378,7 @@ function maffer_v6_render() {
 
     <?php
     $msgs = array(
-        'menus_ok'     => array( 'ok',   'MenÃºs de cena guardados correctamente.' ),
+        'menus_ok'     => array( 'ok',   'Menús de cena guardados correctamente.' ),
         'config_ok'    => array( 'ok',   'Configuracion guardada.' ),
         'horario_ok'   => array( 'ok',   'Configuracion guardada.' ),
         'dia_cerrado'  => array( 'info', 'Sistema cerrado.' ),
@@ -399,7 +399,7 @@ function maffer_v6_render() {
     <?php endif; ?>
 
     <?php if ( $panel === 'menus' ) : ?>
-    <!-- â•â•â• PANEL MENUS (solo Cena) â•â•â• -->
+    <!-- ═══ PANEL MENUS (solo Cena) ═══ -->
     <div style="margin-bottom:16px">
         <a href="<?php echo esc_url( $panel_url ); ?>" style="font-size:13px;font-weight:600;color:var(--or6);text-decoration:none;display:inline-flex;align-items:center;gap:6px">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
@@ -407,8 +407,8 @@ function maffer_v6_render() {
         </a>
     </div>
     <div class="m6mp">
-        <div class="m6stt">GestiÃ³n de menÃºs â€” Cena</div>
-        <p style="font-size:13px;color:var(--ink3);margin-bottom:20px;line-height:1.6">Define las opciones que verÃ¡n los colaboradores en el formulario de registro.</p>
+        <div class="m6stt">Gestión de menús — Cena</div>
+        <p style="font-size:13px;color:var(--ink3);margin-bottom:20px;line-height:1.6">Define las opciones que verán los colaboradores en el formulario de registro.</p>
 
         <form method="post" action="<?php echo esc_url( admin_url('admin-post.php') ); ?>" id="m6fmenus">
             <?php echo $nonce_html; ?>
@@ -419,7 +419,7 @@ function maffer_v6_render() {
                 <?php foreach ( $menus_cena as $idx => $m ) : ?>
                 <div class="m6mi">
                     <div class="m6mih">
-                        <span class="m6min">MenÃº <?php echo $idx + 1; ?></span>
+                        <span class="m6min">Menú <?php echo $idx + 1; ?></span>
                         <button type="button" class="m6rm" onclick="m6rm(this)">
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                             Eliminar
@@ -427,7 +427,7 @@ function maffer_v6_render() {
                     </div>
                     <div class="m6fd">
                         <label class="m6lb">Titulo *</label>
-                        <input type="text" name="maffer_titles_cena[]" class="m6in" placeholder="Ej: MenÃº Cena Ligera" value="<?php echo esc_attr( $m['title'] ); ?>" required>
+                        <input type="text" name="maffer_titles_cena[]" class="m6in" placeholder="Ej: Menú Cena Ligera" value="<?php echo esc_attr( $m['title'] ); ?>" required>
                     </div>
                     <div class="m6fd">
                         <label class="m6lb">Descripcion (visible en el formulario)</label>
@@ -438,25 +438,25 @@ function maffer_v6_render() {
             </div>
             <button type="button" class="m6ab2" onclick="m6add()">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Agregar opciÃ³n de menÃº
+                Agregar opción de menú
             </button>
-            <button type="submit" class="btn-s full" style="margin-top:8px">Guardar menÃºs de cena</button>
+            <button type="submit" class="btn-s full" style="margin-top:8px">Guardar menús de cena</button>
         </form>
     </div>
 
     <?php elseif ( $panel === 'historial' ) : ?>
-    <!-- â•â•â• PANEL HISTORIAL POR CICLOS â•â•â• -->
+    <!-- ═══ PANEL HISTORIAL POR CICLOS ═══ -->
     <?php
-    // Ver detalle de un ciclo especÃ­fico (por fecha de inicio del sÃ¡bado)
+    // Ver detalle de un ciclo específico (por fecha de inicio del sábado)
     $ciclo_sel = isset( $_GET['ciclo'] ) ? sanitize_text_field( $_GET['ciclo'] ) : '';
     $regs_ciclo = array();
     $dist_ciclo = array();
     $ciclo_fin  = '';
 
     if ( $ciclo_sel && preg_match( '/^\d{4}-\d{2}-\d{2}$/', $ciclo_sel ) ) {
-        // Fin del ciclo = domingo de esa misma semana (ciclo_sel = sÃ¡bado, +1 dÃ­a = domingo)
+        // Fin del ciclo = domingo de esa misma semana (ciclo_sel = sábado, +1 día = domingo)
         $dt_fin    = new DateTime( $ciclo_sel, $tz );
-        $dt_fin->modify( '+8 days' ); // hasta el sÃ¡bado siguiente (exclusivo) para capturar todo el ciclo
+        $dt_fin->modify( '+8 days' ); // hasta el sábado siguiente (exclusivo) para capturar todo el ciclo
         $ciclo_fin = $dt_fin->format( 'Y-m-d' );
 
         if ( $t_exist ) {
@@ -474,7 +474,7 @@ function maffer_v6_render() {
         }
     }
 
-    // Lista de ciclos agrupados por sÃ¡bado
+    // Lista de ciclos agrupados por sábado
     $ciclos_lista = array();
     if ( $t_exist ) {
         $ciclos_lista = $wpdb->get_results( $wpdb->prepare(
@@ -491,11 +491,11 @@ function maffer_v6_render() {
     }
 
     $dias_es_h  = array( 'Sunday'=>'domingo','Monday'=>'lunes','Tuesday'=>'martes',
-                         'Wednesday'=>'miÃ©rcoles','Thursday'=>'jueves',
-                         'Friday'=>'viernes','Saturday'=>'sÃ¡bado' );
+                         'Wednesday'=>'miércoles','Thursday'=>'jueves',
+                         'Friday'=>'viernes','Saturday'=>'sábado' );
     $meses_es_h = array( 1=>'ene',2=>'feb',3=>'mar',4=>'abr',5=>'may',6=>'jun',
                          7=>'jul',8=>'ago',9=>'sep',10=>'oct',11=>'nov',12=>'dic' );
-    // NOTE: maffer_fmt_ciclo_date() is in helpers.php — DO NOT redefine here
+    // NOTE: maffer_fmt_ciclo_date() is in helpers.php � DO NOT redefine here
     ?>
     <div style="margin-bottom:16px">
         <a href="<?php echo esc_url( $panel_url ); ?>" style="font-size:13px;font-weight:600;color:var(--or6);text-decoration:none;display:inline-flex;align-items:center;gap:6px">
@@ -505,7 +505,7 @@ function maffer_v6_render() {
     </div>
 
     <?php if ( $ciclo_sel && preg_match( '/^\d{4}-\d{2}-\d{2}$/', $ciclo_sel ) ) : ?>
-    <!-- Detalle de ciclo especÃ­fico -->
+    <!-- Detalle de ciclo específico -->
     <?php
         $dt_inicio_ciclo = new DateTime( $ciclo_sel, $tz );
         $label_ciclo = 'Ciclo del ' . maffer_fmt_ciclo_date( $ciclo_sel, $dias_es_h, $meses_es_h );
@@ -561,21 +561,21 @@ function maffer_v6_render() {
                     <th style="width:70px">Hora</th>
                     <th>Nombre</th>
                     <th style="width:140px">RUT</th>
-                    <th>MenÃº</th>
+                    <th>Menú</th>
                     <th>Obs.</th>
                 </tr></thead>
                 <tbody>
                 <?php foreach ( $regs_ciclo as $reg ) :
                     $mi = array_search( $reg['menu_titulo'], array_keys( $dist_ciclo ), true );
                     $mc = $menu_colors[ ( $mi !== false ? $mi : 0 ) % count( $menu_colors ) ];
-                    $f_row = ! empty( $reg['fecha'] ) ? ( new DateTime( $reg['fecha'] ) )->format('d/m') : 'â€”'; ?>
+                    $f_row = ! empty( $reg['fecha'] ) ? ( new DateTime( $reg['fecha'] ) )->format('d/m') : '—'; ?>
                 <tr>
                     <td class="m6mn m6mt"><?php echo esc_html( $f_row ); ?></td>
                     <td class="m6mn"><?php echo esc_html( substr( $reg['hora'], 0, 5 ) ); ?></td>
                     <td class="m6nm"><?php echo esc_html( $reg['nombre'] ); ?></td>
                     <td class="m6mn m6mt"><?php echo esc_html( $reg['rut'] ); ?></td>
                     <td><span class="m6pll"><i style="background:<?php echo esc_attr( $mc ); ?>"></i><?php echo esc_html( $reg['menu_titulo'] ?: 'Sin titulo' ); ?></span></td>
-                    <td style="font-size:12px;color:var(--ink3)"><?php echo esc_html( $reg['observaciones'] ?: 'â€”' ); ?></td>
+                    <td style="font-size:12px;color:var(--ink3)"><?php echo esc_html( $reg['observaciones'] ?: '—' ); ?></td>
                 </tr>
                 <?php endforeach; ?>
                 </tbody>
@@ -591,13 +591,13 @@ function maffer_v6_render() {
     <div class="m6mp">
         <div style="margin-bottom:20px">
             <div class="m6stt" style="margin-bottom:4px">Historial de ciclos</div>
-            <p style="font-size:13px;color:var(--ink3);margin:0">Cada ciclo va del sÃ¡bado al domingo. Haz clic en un ciclo para ver el detalle.</p>
+            <p style="font-size:13px;color:var(--ink3);margin:0">Cada ciclo va del sábado al domingo. Haz clic en un ciclo para ver el detalle.</p>
         </div>
         <?php if ( empty( $ciclos_lista ) ) : ?>
         <div class="m6emp" style="padding:40px;text-align:center">
             <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4;margin-bottom:12px"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
             <div style="font-size:14px;font-weight:600;margin-bottom:4px">Sin ciclos registrados</div>
-            <div style="font-size:13px">AÃºn no hay registros en el sistema.</div>
+            <div style="font-size:13px">Aún no hay registros en el sistema.</div>
         </div>
         <?php else : ?>
         <div style="display:flex;flex-direction:column;gap:10px">
@@ -625,13 +625,13 @@ function maffer_v6_render() {
                             <?php if ( $es_actual ) : ?><span style="margin-left:8px;font-size:10px;font-weight:700;background:var(--or);color:#fff;padding:2px 8px;border-radius:99px">Actual</span><?php endif; ?>
                         </div>
                         <?php
-                            // Mostrar rango completo del ciclo: sÃ¡bado â†’ viernes siguiente
+                            // Mostrar rango completo del ciclo: sábado → viernes siguiente
                             $dt_viernes = new DateTime( $c_inicio, $tz );
-                            $dt_viernes->modify( '+6 days' ); // sÃ¡bado + 6 = viernes
+                            $dt_viernes->modify( '+6 days' ); // sábado + 6 = viernes
                             $label_fin_ciclo = maffer_fmt_ciclo_date( $dt_viernes->format('Y-m-d'), $dias_es_h, $meses_es_h );
                         ?>
                         <div style="font-size:12px;color:var(--ink3)">
-                            <?php echo esc_html( $label_ini ); ?> â†’ <?php echo esc_html( $label_fin_ciclo ); ?> (<?php echo $c_total; ?> registros)
+                            <?php echo esc_html( $label_ini ); ?> → <?php echo esc_html( $label_fin_ciclo ); ?> (<?php echo $c_total; ?> registros)
                         </div>
                     </div>
                 </div>
@@ -650,7 +650,7 @@ function maffer_v6_render() {
     <?php endif; // detalle vs lista ?>
 
     <?php elseif ( $panel === 'config' ) : ?>
-    <!-- â•â•â• PANEL CONFIG â•â•â• -->
+    <!-- ═══ PANEL CONFIG ═══ -->
     <div style="margin-bottom:16px">
         <a href="<?php echo esc_url( $panel_url ); ?>" style="font-size:13px;font-weight:600;color:var(--or6);text-decoration:none;display:inline-flex;align-items:center;gap:6px">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
@@ -664,8 +664,8 @@ function maffer_v6_render() {
         <div class="m6cc">
             <div class="m6ct">Horario semanal recurrente</div>
             <p style="font-size:13px;color:var(--ink3);margin-bottom:20px;line-height:1.6">
-                Configura una sola vez. El sistema abre y cierra automÃ¡ticamente cada semana en estos dÃ­as y horarios,
-                sin necesidad de reprogramar. Al cerrar, envÃ­a el resumen por correo automÃ¡ticamente.
+                Configura una sola vez. El sistema abre y cierra automáticamente cada semana en estos días y horarios,
+                sin necesidad de reprogramar. Al cerrar, envía el resumen por correo automáticamente.
             </p>
 
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:16px">
@@ -677,7 +677,7 @@ function maffer_v6_render() {
                     </div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
                         <div class="m6fd" style="margin-bottom:0">
-                            <label class="m6lb">DÃ­a</label>
+                            <label class="m6lb">Día</label>
                             <select name="apertura_dia" class="m6in" style="cursor:pointer">
                                 <?php foreach ( $dias_semana as $val => $label ) : ?>
                                 <option value="<?php echo $val; ?>" <?php selected( $ap_dia, $val ); ?>>
@@ -697,11 +697,11 @@ function maffer_v6_render() {
                 <div>
                     <div style="display:flex;align-items:center;gap:7px;margin-bottom:12px">
                         <span style="width:8px;height:8px;border-radius:50%;background:var(--rd);display:inline-block"></span>
-                        <span class="m6lb" style="margin-bottom:0">Cierre + envÃ­o de correo</span>
+                        <span class="m6lb" style="margin-bottom:0">Cierre + envío de correo</span>
                     </div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
                         <div class="m6fd" style="margin-bottom:0">
-                            <label class="m6lb">DÃ­a</label>
+                            <label class="m6lb">Día</label>
                             <select name="cierre_dia" class="m6in" style="cursor:pointer">
                                 <?php foreach ( $dias_semana as $val => $label ) : ?>
                                 <option value="<?php echo $val; ?>" <?php selected( $cl_dia, $val ); ?>>
@@ -719,16 +719,16 @@ function maffer_v6_render() {
                 </div>
             </div>
 
-            <!-- PrÃ³ximo ciclo calculado -->
+            <!-- Próximo ciclo calculado -->
             <?php if ( $proximo_ap_fmt && $proximo_cl_fmt ) : ?>
             <div style="padding:12px 16px;background:#eef3e4;border:1px solid #c2d9a0;border-radius:11px;font-size:12px;color:#5a7a3a">
                 <div style="font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:6px">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-                    PrÃ³ximo ciclo calculado automÃ¡ticamente
+                    Próximo ciclo calculado automáticamente
                 </div>
                 <div style="font-weight:600">
                     Abre: <?php echo esc_html( $proximo_ap_fmt ); ?>
-                    &nbsp;â†’&nbsp;
+                    &nbsp;→&nbsp;
                     Cierra: <?php echo esc_html( $proximo_cl_fmt ); ?>
                 </div>
                 <div style="margin-top:4px;font-size:11px;color:#5a7a3a;opacity:.75">
@@ -739,17 +739,17 @@ function maffer_v6_render() {
         </div>
         <div class="m6cc">
             <div class="m6ct">Correo de destino</div>
-            <p style="font-size:13px;color:var(--ink3);margin-bottom:16px;line-height:1.6">El resumen con el Excel se envÃ­a aquÃ­ al cerrar el ciclo (automÃ¡tica o manualmente).</p>
+            <p style="font-size:13px;color:var(--ink3);margin-bottom:16px;line-height:1.6">El resumen con el Excel se envía aquí al cerrar el ciclo (automática o manualmente).</p>
             <div class="m6fd">
-                <label class="m6lb">Correo para resÃºmenes del ciclo</label>
+                <label class="m6lb">Correo para resúmenes del ciclo</label>
                 <input type="email" name="correo_destino" class="m6in" value="<?php echo esc_attr( $correo ); ?>" placeholder="admin@empresa.cl" style="max-width:380px">
             </div>
         </div>
-        <button type="submit" class="btn-s full">Guardar configuraciÃ³n</button>
+        <button type="submit" class="btn-s full">Guardar configuración</button>
     </form>
 
     <?php else : ?>
-    <!-- â•â•â• DASHBOARD â•â•â• -->
+    <!-- ═══ DASHBOARD ═══ -->
     <section class="m6hero">
         <div>
             <div class="m6ey">Panel de control &middot; <?php echo esc_html( $hoy_fmt ); ?></div>
@@ -808,7 +808,7 @@ function maffer_v6_render() {
                 <?php else : ?>
                 <div style="font-size:13px;color:var(--ink3);padding:4px 0">Sin registros en el ciclo</div>
                 <?php endif; ?>
-                <div class="m6kl" style="margin-top:10px">Por menÃº</div>
+                <div class="m6kl" style="margin-top:10px">Por menú</div>
             </div>
         </div>
         <div class="m6kpi">
@@ -829,7 +829,7 @@ function maffer_v6_render() {
                 <?php if ( $proximo_ap_fmt ) : ?>
                 <div style="display:inline-flex;align-items:center;gap:5px;margin-top:5px;background:#eef3e4;border:1px solid #c2d9a0;border-radius:20px;padding:3px 9px;font-size:10px;font-weight:700;color:#5a7a3a;white-space:nowrap">
                     <span style="width:5px;height:5px;border-radius:50%;background:#5a7a3a;display:inline-block"></span>
-                    PrÃ³ximo: <?php echo esc_html( $proximo_ap_fmt ); ?>
+                    Próximo: <?php echo esc_html( $proximo_ap_fmt ); ?>
                 </div>
                 <?php endif; ?>
             </div>
@@ -857,7 +857,7 @@ function maffer_v6_render() {
         </form>
         <a href="<?php echo esc_url( admin_url( 'admin.php?page=maffer-panel&panel=config' ) ); ?>" class="m6act">
             <div class="m6ai"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></div>
-            <div class="m6ab"><div class="m6at">ConfiguraciÃ³n</div><div class="m6as">Apertura programada y correo</div></div>
+            <div class="m6ab"><div class="m6at">Configuración</div><div class="m6as">Apertura programada y correo</div></div>
             <svg class="m6ach" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
         </a>
         <a href="<?php echo esc_url( admin_url( 'admin.php?page=maffer-panel&panel=historial' ) ); ?>" class="m6act">
@@ -892,7 +892,7 @@ function maffer_v6_render() {
         <div style="margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
             <a href="<?php echo esc_url( admin_url( 'admin.php?page=maffer-panel&panel=menus' ) ); ?>" style="font-size:12px;font-weight:700;color:var(--or6);text-decoration:none;background:var(--or05);border:1px solid var(--or1);padding:5px 12px;border-radius:8px;display:inline-flex;align-items:center;gap:5px">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Gestionar menÃºs
+                Gestionar menús
             </a>
             <button type="button" onclick="m6abrirCrear()"
                 style="font-size:12px;font-weight:700;color:#fff;background:linear-gradient(180deg,#ef8a2d,#E67E22 60%,#d26a10);border:0;padding:5px 12px;border-radius:8px;display:inline-flex;align-items:center;gap:5px;cursor:pointer;box-shadow:0 2px 8px rgba(230,126,34,.4);transition:transform .1s"
@@ -903,7 +903,7 @@ function maffer_v6_render() {
         </div>
         <?php if ( ! $t_exist ) : ?>
         <div style="padding:20px;background:#fbebe6;border:1px solid rgba(185,74,50,.3);border-radius:12px;font-size:13px;color:#b94a32;font-weight:600">
-            La tabla de registros no existe. Activa el Snippet 1 (creaciÃ³n de tabla) primero.
+            La tabla de registros no existe. Activa el Snippet 1 (creación de tabla) primero.
         </div>
         <?php else : ?>
         <div class="m6tw">
@@ -914,7 +914,7 @@ function maffer_v6_render() {
                         <th style="width:66px">Hora</th>
                         <th>Nombre</th>
                         <th style="width:140px">RUT</th>
-                        <th style="width:180px">MenÃº</th>
+                        <th style="width:180px">Menú</th>
                         <th style="width:80px;text-align:center">Acciones</th>
                     </tr>
                 </thead>
@@ -925,7 +925,7 @@ function maffer_v6_render() {
                     <?php foreach ( $registros as $reg ) :
                         $mi    = array_search( $reg['menu_titulo'], array_keys( $dist ), true );
                         $mc    = $menu_colors[ ( $mi !== false ? $mi : 0 ) % count( $menu_colors ) ];
-                        $f_row = isset( $reg['fecha'] ) ? ( new DateTime( $reg['fecha'] ) )->format('d/m') : 'â€”';
+                        $f_row = isset( $reg['fecha'] ) ? ( new DateTime( $reg['fecha'] ) )->format('d/m') : '—';
                     ?>
                     <tr data-q="<?php echo esc_attr( strtolower( $reg['nombre'] . ' ' . $reg['rut'] ) ); ?>"
                         data-m="<?php echo esc_attr( strtolower( $reg['menu_titulo'] ) ); ?>">
@@ -964,7 +964,7 @@ function maffer_v6_render() {
     <?php endif; // fin dashboard ?>
     </div><!-- #maf6 -->
 
-    <!-- â•â•â• MODAL AGREGAR REGISTRO â•â•â• -->
+    <!-- ═══ MODAL AGREGAR REGISTRO ═══ -->
     <div class="m6bk" id="m6mcre" onclick="if(event.target===this)this.classList.remove('open')">
         <div class="m6md" style="max-width:520px">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:20px 24px 18px;background:#fffaf1;border-bottom:1px solid #f0e4c8">
@@ -1001,10 +1001,10 @@ function maffer_v6_render() {
                         onblur="this.style.borderColor='#e6d8bf';this.style.background='#fbf3e4';this.style.boxShadow='none'"
                         oninput="m6fmtRut(this)">
                 </div>
-                <!-- MenÃº Cena (ancho completo, sin selector de turno) -->
+                <!-- Menú Cena (ancho completo, sin selector de turno) -->
                 <div style="margin-bottom:14px">
                     <label style="display:block;font-size:11px;font-weight:700;color:#97897a;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;font-family:'Plus Jakarta Sans',sans-serif">
-                        MenÃº *
+                        Menú *
                         <span style="margin-left:6px;font-size:10px;font-weight:600;background:#eaf0f6;color:#3a5a7a;padding:2px 8px;border-radius:999px;text-transform:none;letter-spacing:0">Cena</span>
                     </label>
                     <select id="m6cmn"
@@ -1041,7 +1041,7 @@ function maffer_v6_render() {
         </div>
     </div>
 
-    <!-- â•â•â• MODAL EDITAR REGISTRO â•â•â• -->
+    <!-- ═══ MODAL EDITAR REGISTRO ═══ -->
     <div class="m6bk" id="m6medt" onclick="if(event.target===this)this.classList.remove('open')">
         <div class="m6md" style="max-width:520px">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:20px 24px 18px;background:#fffaf1;border-bottom:1px solid #f0e4c8">
@@ -1078,10 +1078,10 @@ function maffer_v6_render() {
                     <input type="text" id="m6ert" readonly
                         style="width:100%;background:#f4ede0;border:1.5px solid #e0d0b8;border-radius:10px;padding:11px 14px;font-size:14px;font-weight:500;color:#97897a;outline:none;font-family:'JetBrains Mono',monospace;cursor:not-allowed">
                 </div>
-                <!-- MenÃº (ancho completo, turno estÃ¡tico Cena) -->
+                <!-- Menú (ancho completo, turno estático Cena) -->
                 <div style="margin-bottom:14px">
                     <label style="display:block;font-size:11px;font-weight:700;color:#97897a;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;font-family:'Plus Jakarta Sans',sans-serif">
-                        MenÃº
+                        Menú
                         <span style="margin-left:6px;font-size:10px;font-weight:600;background:#eaf0f6;color:#3a5a7a;padding:2px 8px;border-radius:999px;text-transform:none;letter-spacing:0">Cena</span>
                     </label>
                     <select id="m6emn"
@@ -1118,20 +1118,20 @@ function maffer_v6_render() {
         </div>
     </div>
 
-    <!-- â•â•â• MODAL CONFIRMAR ESTADO â•â•â• -->
+    <!-- ═══ MODAL CONFIRMAR ESTADO ═══ -->
     <div class="m6bk" id="m6mconf" onclick="if(event.target===this)this.classList.remove('open')">
         <div class="m6md m6mdsm">
             <div class="m6mhd">
                 <div>
                     <div class="m6mey"><?php echo $abierto ? 'Cerrar sistema' : 'Abrir sistema'; ?></div>
-                    <h3 class="m6mtt"><?php echo $abierto ? 'Â¿Cerrar los pedidos?' : 'Â¿Abrir los pedidos?'; ?></h3>
+                    <h3 class="m6mtt"><?php echo $abierto ? '¿Cerrar los pedidos?' : '¿Abrir los pedidos?'; ?></h3>
                 </div>
                 <button class="m6mcl" onclick="document.getElementById('m6mconf').classList.remove('open')">&times;</button>
             </div>
             <div class="m6mb">
                 <p class="m6mds"><?php echo $abierto
-                    ? 'Los colaboradores ya no podrÃ¡n registrar su menÃº hasta la prÃ³xima apertura.'
-                    : 'Los colaboradores podrÃ¡n acceder al formulario de inmediato.'; ?></p>
+                    ? 'Los colaboradores ya no podrán registrar su menú hasta la próxima apertura.'
+                    : 'Los colaboradores podrán acceder al formulario de inmediato.'; ?></p>
             </div>
             <div class="m6mft">
                 <button class="btn-g" onclick="document.getElementById('m6mconf').classList.remove('open')">Cancelar</button>
@@ -1155,22 +1155,22 @@ function maffer_v6_render() {
         </div>
     </div>
 
-    <!-- â•â•â• MODAL CAMBIAR CONTRASEÃ‘A â•â•â• -->
+    <!-- ═══ MODAL CAMBIAR CONTRASEÑA ═══ -->
     <div class="m6bk" id="m6mpwd" onclick="if(event.target===this)m6closePwd()">
         <div class="m6md m6mdsm">
             <div class="m6mhd">
                 <div>
                     <div class="m6mey">Mi cuenta</div>
-                    <h3 class="m6mtt">Cambiar contraseÃ±a</h3>
+                    <h3 class="m6mtt">Cambiar contraseña</h3>
                 </div>
                 <button class="m6mcl" id="m6pwdcl" onclick="m6closePwd()">&times;</button>
             </div>
             <div id="m6pwdform">
                 <div class="m6mb">
-                    <p class="m6mds">Elige una contraseÃ±a segura que solo tÃº conozcas. DeberÃ¡s usarla la prÃ³xima vez que inicies sesiÃ³n.</p>
-                    <div class="m6fd"><label class="m6lb">ContraseÃ±a actual</label><input type="password" id="m6pwd0" class="m6in" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" autocomplete="current-password"></div>
-                    <div class="m6fd"><label class="m6lb">Nueva contraseÃ±a</label><input type="password" id="m6pwd1" class="m6in" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" autocomplete="new-password"></div>
-                    <div class="m6fd"><label class="m6lb">Confirmar nueva contraseÃ±a</label><input type="password" id="m6pwd2" class="m6in" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" autocomplete="new-password"></div>
+                    <p class="m6mds">Elige una contraseña segura que solo tú conozcas. Deberás usarla la próxima vez que inicies sesión.</p>
+                    <div class="m6fd"><label class="m6lb">Contraseña actual</label><input type="password" id="m6pwd0" class="m6in" placeholder="••••••••" autocomplete="current-password"></div>
+                    <div class="m6fd"><label class="m6lb">Nueva contraseña</label><input type="password" id="m6pwd1" class="m6in" placeholder="••••••••" autocomplete="new-password"></div>
+                    <div class="m6fd"><label class="m6lb">Confirmar nueva contraseña</label><input type="password" id="m6pwd2" class="m6in" placeholder="••••••••" autocomplete="new-password"></div>
                     <div id="m6pwdmsg" class="m6mm" style="display:none"></div>
                 </div>
                 <div class="m6mft">
@@ -1178,7 +1178,7 @@ function maffer_v6_render() {
                     <button id="m6pwdbtn" onclick="m6submitPwd()"
                         style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(180deg,#ef8a2d,#E67E22 60%,#d26a10);border:0;color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:14px;padding:11px 18px;border-radius:10px;box-shadow:0 1px 0 rgba(255,255,255,.3) inset,0 -2px 0 rgba(0,0,0,.12) inset,0 6px 14px -4px rgba(230,126,34,.6);cursor:pointer;transition:transform .1s">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
-                        Guardar contraseÃ±a
+                        Guardar contraseña
                     </button>
                 </div>
             </div>
@@ -1187,14 +1187,14 @@ function maffer_v6_render() {
                     <div style="width:56px;height:56px;border-radius:50%;background:#eef3e4;display:grid;place-items:center;margin:0 auto 16px">
                         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#5a7a3a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
                     </div>
-                    <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:17px;font-weight:800;color:#2a231a;margin-bottom:8px">ContraseÃ±a actualizada</div>
-                    <p class="m6mds" style="margin-bottom:0">Tu sesiÃ³n ha sido cerrada por seguridad.<br>Inicia sesiÃ³n nuevamente con tu nueva contraseÃ±a.</p>
+                    <div style="font-family:'Plus Jakarta Sans',sans-serif;font-size:17px;font-weight:800;color:#2a231a;margin-bottom:8px">Contraseña actualizada</div>
+                    <p class="m6mds" style="margin-bottom:0">Tu sesión ha sido cerrada por seguridad.<br>Inicia sesión nuevamente con tu nueva contraseña.</p>
                 </div>
                 <div class="m6mft" style="justify-content:center">
                     <a href="<?php echo esc_url( home_url( '/admin-maffer/' ) ); ?>"
                         style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(180deg,#ef8a2d,#E67E22 60%,#d26a10);border:0;color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:14px;padding:11px 22px;border-radius:10px;box-shadow:0 1px 0 rgba(255,255,255,.3) inset,0 -2px 0 rgba(0,0,0,.12) inset,0 6px 14px -4px rgba(230,126,34,.6);text-decoration:none;transition:transform .1s">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-                        Iniciar sesiÃ³n
+                        Iniciar sesión
                     </a>
                 </div>
             </div>
@@ -1207,7 +1207,7 @@ function maffer_v6_render() {
         var NK = '<?php echo esc_js( $nonce_ajax ); ?>';
         var filt = 'todos', qry = '';
 
-        // Opciones de menÃº cena (para poblar selects de modales)
+        // Opciones de menú cena (para poblar selects de modales)
         var MENUS_CENA = <?php
             $arr = array();
             foreach ( $menus_cena as $m ) {
@@ -1216,7 +1216,7 @@ function maffer_v6_render() {
             echo json_encode( $arr );
         ?>;
 
-        // â”€â”€ Filtros de la tabla â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Filtros de la tabla ──────────────────────────────
         window.m6filtrar = function() {
             qry = ( $('#m6q').val() || '' ).toLowerCase();
             _render();
@@ -1235,15 +1235,15 @@ function maffer_v6_render() {
             $('#m6vis').text(v);
         }
 
-        // â”€â”€ Toggle de estado (sin chequeo de horario) â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Toggle de estado (sin chequeo de horario) ────────
         window.m6confirmToggle = function() {
             $('#m6mconf').addClass('open');
         };
 
-        // â”€â”€ Abrir modal Crear â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Abrir modal Crear ────────────────────────────────
         window.m6abrirCrear = function() {
             $('#m6cnm, #m6crt, #m6cob').val('');
-            // Repoblar select de menÃº con opciones actuales
+            // Repoblar select de menú con opciones actuales
             var sel = document.getElementById('m6cmn');
             if (sel && MENUS_CENA.length) {
                 sel.innerHTML = '';
@@ -1259,14 +1259,14 @@ function maffer_v6_render() {
             setTimeout(function() { $('#m6cnm').focus(); }, 200);
         };
 
-        // â”€â”€ Crear registro â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Crear registro ───────────────────────────────────
         window.m6crearRegistro = function() {
             var n = $('#m6cnm').val().trim();
             var r = $('#m6crt').val().trim();
             var m = $('#m6cmn').val();
             if (!n) { _cmsg('El nombre es obligatorio.', false); return; }
             if (!r) { _cmsg('El RUT es obligatorio.', false); return; }
-            if (!m) { _cmsg('Selecciona un menÃº.', false); return; }
+            if (!m) { _cmsg('Selecciona un menú.', false); return; }
             var rLimpio = r.replace(/\./g, '');
             $('#m6cbtn').prop('disabled', true).css('opacity', '.6');
             $.post(AX, {
@@ -1282,19 +1282,19 @@ function maffer_v6_render() {
                     $('#m6cbtn').prop('disabled', false).css('opacity', '1');
                 }
             }).fail(function() {
-                _cmsg('Error de conexiÃ³n.', false);
+                _cmsg('Error de conexión.', false);
                 $('#m6cbtn').prop('disabled', false).css('opacity', '1');
             });
         };
         function _cmsg(t, ok) { $('#m6cmm').show().removeClass('ok er').addClass(ok ? 'ok' : 'er').text(t); }
 
-        // â”€â”€ Abrir modal Editar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-        // Firma: m6editar(id, nom, rut, men, obs)  â€” sin turno
+        // ── Abrir modal Editar ───────────────────────────────
+        // Firma: m6editar(id, nom, rut, men, obs)  — sin turno
         window.m6editar = function(id, nom, rut, men, obs) {
             $('#m6eid').val(id);
             $('#m6enm').val(nom);
             $('#m6ert').val(rut);
-            // Repoblar select con menÃºs cena y preseleccionar
+            // Repoblar select con menús cena y preseleccionar
             var sel = document.getElementById('m6emn');
             if (sel && MENUS_CENA.length) {
                 sel.innerHTML = '';
@@ -1310,7 +1310,7 @@ function maffer_v6_render() {
             $('#m6medt').addClass('open');
         };
 
-        // â”€â”€ Guardar ediciÃ³n â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Guardar edición ──────────────────────────────────
         window.m6guardar = function() {
             var n = $('#m6enm').val().trim();
             if (!n) { _emsg('El nombre es obligatorio.', false); return; }
@@ -1324,43 +1324,43 @@ function maffer_v6_render() {
             }, function(r) {
                 if (r.success) { m6toast('Registro actualizado.'); setTimeout(function() { location.reload(); }, 700); }
                 else _emsg('Error: ' + r.data, false);
-            }).fail(function() { _emsg('Error de conexiÃ³n.', false); });
+            }).fail(function() { _emsg('Error de conexión.', false); });
         };
         function _emsg(t, ok) { $('#m6emm').show().removeClass('ok er').addClass(ok ? 'ok' : 'er').text(t); }
 
-        // â”€â”€ Eliminar registro â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Eliminar registro ────────────────────────────────
         window.m6eliminar = function(id) {
-            if (!confirm('Â¿Eliminar este registro? No se puede deshacer.')) return;
+            if (!confirm('¿Eliminar este registro? No se puede deshacer.')) return;
             $.post(AX, { action: 'maffer_eliminar_registro', nonce: NK, id: id }, function(r) {
                 if (r.success) { m6toast('Registro eliminado.'); setTimeout(function() { location.reload(); }, 600); }
                 else alert('Error: ' + r.data);
             });
         };
 
-        // â”€â”€ GestiÃ³n de menÃºs (agregar / eliminar filas) â”€â”€â”€â”€â”€â”€
+        // ── Gestión de menús (agregar / eliminar filas) ──────
         window.m6rm = function(btn) {
             var cnt = '#m6icnt-cena';
-            if ($(cnt + ' .m6mi').length <= 1) { alert('Debe haber al menos un menÃº.'); return; }
+            if ($(cnt + ' .m6mi').length <= 1) { alert('Debe haber al menos un menú.'); return; }
             $(btn).closest('.m6mi').remove(); _renum();
         };
         window.m6add = function() {
             var n = $('#m6icnt-cena .m6mi').length;
             var html = '<div class="m6mi">'
-                + '<div class="m6mih"><span class="m6min">MenÃº ' + (n + 1) + '</span>'
+                + '<div class="m6mih"><span class="m6min">Menú ' + (n + 1) + '</span>'
                 + '<button type="button" class="m6rm" onclick="m6rm(this)">'
                 + '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Eliminar</button></div>'
                 + '<div class="m6fd"><label class="m6lb">Titulo *</label>'
-                + '<input type="text" name="maffer_titles_cena[]" class="m6in" placeholder="Ej: MenÃº Cena Especial" required></div>'
+                + '<input type="text" name="maffer_titles_cena[]" class="m6in" placeholder="Ej: Menú Cena Especial" required></div>'
                 + '<div class="m6fd"><label class="m6lb">Descripcion</label>'
                 + '<textarea name="maffer_descs_cena[]" class="m6ta" placeholder="Ej: Sopa, sandwich, postre"></textarea></div>'
                 + '</div>';
             $('#m6icnt-cena').append(html);
         };
         function _renum() {
-            $('#m6icnt-cena .m6mi').each(function(i) { $(this).find('.m6min').text('MenÃº ' + (i + 1)); });
+            $('#m6icnt-cena .m6mi').each(function(i) { $(this).find('.m6min').text('Menú ' + (i + 1)); });
         }
 
-        // â”€â”€ Formateo de RUT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Formateo de RUT ──────────────────────────────────
         window.m6fmtRut = function(input) {
             var v = input.value.replace(/[^0-9kK]/g, '').toUpperCase();
             if (v.length > 1) {
@@ -1371,7 +1371,7 @@ function maffer_v6_render() {
             input.value = v;
         };
 
-        // â”€â”€ Toast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Toast ────────────────────────────────────────────
         window.m6toast = function(txt, tipo) {
             var isErr = (tipo === 'er');
             var icono = isErr
@@ -1383,7 +1383,7 @@ function maffer_v6_render() {
             setTimeout(function() { el.animate({ opacity: 0 }, 400, function() { el.remove(); }); }, isErr ? 3500 : 2200);
         };
 
-        // â”€â”€ Dropdown usuario â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Dropdown usuario ─────────────────────────────────
         window.m6toggleUser = function() {
             var d = document.getElementById('m6avdrop');
             if (!d) return;
@@ -1397,13 +1397,13 @@ function maffer_v6_render() {
             }
         });
 
-        // â”€â”€ Cambiar contraseÃ±a â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Cambiar contraseña ───────────────────────────────
         window.m6closePwd = function() {
             document.getElementById('m6mpwd').classList.remove('open');
             $('#m6pwd0, #m6pwd1, #m6pwd2').val('');
             $('#m6pwdmsg').hide().text('').removeClass('ok er');
             $('#m6pwdbtn').prop('disabled', false).html(
-                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> Guardar contraseÃ±a'
+                '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> Guardar contraseña'
             );
             $('#m6pwdform').show();
             $('#m6pwdok').hide();
@@ -1416,11 +1416,11 @@ function maffer_v6_render() {
             var nw2 = $('#m6pwd2').val();
             var $msg = $('#m6pwdmsg');
             $msg.hide().removeClass('ok er');
-            if (!cur) { $msg.show().addClass('er').text('Ingresa tu contraseÃ±a actual.'); return; }
-            if (nw.length < 8) { $msg.show().addClass('er').text('La nueva contraseÃ±a debe tener al menos 8 caracteres.'); return; }
-            if (nw !== nw2) { $msg.show().addClass('er').text('Las contraseÃ±as no coinciden.'); return; }
+            if (!cur) { $msg.show().addClass('er').text('Ingresa tu contraseña actual.'); return; }
+            if (nw.length < 8) { $msg.show().addClass('er').text('La nueva contraseña debe tener al menos 8 caracteres.'); return; }
+            if (nw !== nw2) { $msg.show().addClass('er').text('Las contraseñas no coinciden.'); return; }
             var $btn = $('#m6pwdbtn');
-            $btn.prop('disabled', true).html('Guardandoâ€¦');
+            $btn.prop('disabled', true).html('Guardando…');
             $.post(ajaxurl, {
                 action:   'maffer_cambiar_password',
                 nonce:    '<?php echo esc_js( wp_create_nonce("maffer_pwd_nonce") ); ?>',
@@ -1433,15 +1433,15 @@ function maffer_v6_render() {
                     document.getElementById('m6mpwd').removeAttribute('onclick');
                     document.getElementById('m6pwdcl').style.display = 'none';
                 } else {
-                    $msg.show().addClass('er').text(r.data || 'Error al cambiar la contraseÃ±a.');
+                    $msg.show().addClass('er').text(r.data || 'Error al cambiar la contraseña.');
                     $btn.prop('disabled', false).html(
-                        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> Guardar contraseÃ±a'
+                        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> Guardar contraseña'
                     );
                 }
             }).fail(function() {
-                $msg.show().addClass('er').text('Error de conexiÃ³n. Intenta nuevamente.');
+                $msg.show().addClass('er').text('Error de conexión. Intenta nuevamente.');
                 $btn.prop('disabled', false).html(
-                    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> Guardar contraseÃ±a'
+                    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg> Guardar contraseña'
                 );
             });
         };
