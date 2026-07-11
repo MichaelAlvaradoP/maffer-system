@@ -60,7 +60,7 @@ if ( ! function_exists( 'maffer_ajax_submit_form' ) ) {
 
         $nombre        = isset( $_POST['nombre'] )        ? sanitize_text_field( $_POST['nombre'] )            : '';
         $rut_raw       = isset( $_POST['rut'] )           ? sanitize_text_field( $_POST['rut'] )               : '';
-        $menu_valor    = isset( $_POST['menu'] )          ? sanitize_text_field( $_POST['menu'] )              : '';
+        $menus_json_str= isset( $_POST['menus'] )         ? stripslashes($_POST['menus'])                      : '';
         $observaciones = isset( $_POST['observaciones'] ) ? sanitize_textarea_field( $_POST['observaciones'] ) : '';
         $terminos      = isset( $_POST['terminos'] )      ? (bool) $_POST['terminos']                          : false;
 
@@ -71,7 +71,8 @@ if ( ! function_exists( 'maffer_ajax_submit_form' ) ) {
         if ( empty( $rut_raw ) ) {
             wp_send_json_error( array( 'campo' => 'rut', 'mensaje' => 'El RUT es requerido.' ) );
         }
-        if ( empty( $menu_valor ) ) {
+        $menus_seleccionados = json_decode( $menus_json_str, true );
+        if ( empty( $menus_seleccionados ) || ! is_array( $menus_seleccionados ) ) {
             wp_send_json_error( array( 'campo' => 'menu', 'mensaje' => 'Debes seleccionar un menú.' ) );
         }
         if ( ! $terminos ) {
@@ -93,11 +94,6 @@ if ( ! function_exists( 'maffer_ajax_submit_form' ) ) {
             wp_send_json_error( array( 'campo' => 'rut', 'mensaje' => 'El RUT ingresado no es válido.' ) );
         }
 
-        // Descomponer valor del menú (formato: "Título ## Descripción")
-        $partes      = explode( '##', $menu_valor, 2 );
-        $menu_titulo = trim( isset( $partes[0] ) ? $partes[0] : $menu_valor );
-        $menu_desc   = trim( isset( $partes[1] ) ? $partes[1] : '' );
-
         // Zona horaria y fechas
         $tz_chile = new DateTimeZone( 'America/Santiago' );
         $ahora    = new DateTime( 'now', $tz_chile );
@@ -106,6 +102,7 @@ if ( ! function_exists( 'maffer_ajax_submit_form' ) ) {
 
         global $wpdb;
         $tabla = $wpdb->prefix . 'maffer_registros';
+        $tabla_detalles = $wpdb->prefix . 'maffer_registro_detalles';
 
         // Soft-delete filter: excluir registros eliminados lógicamente
         $soft_delete_filter = '( deleted_at IS NULL OR deleted_at = %s )';
@@ -138,15 +135,15 @@ if ( ! function_exists( 'maffer_ajax_submit_form' ) ) {
             ) );
         }
 
-        // Guardar
+        // Guardar registro maestro
         $result = $wpdb->insert(
             $tabla,
             array(
                 'nombre'        => $nombre,
                 'rut'           => $rut,
                 'turno'         => 'cena',
-                'menu_titulo'   => $menu_titulo,
-                'menu_desc'     => $menu_desc,
+                'menu_titulo'   => 'Selección Semanal',
+                'menu_desc'     => 'Ver detalles por día',
                 'observaciones' => $observaciones,
                 'fecha'         => $hoy,
                 'hora'          => $hora_cl,
@@ -158,12 +155,32 @@ if ( ! function_exists( 'maffer_ajax_submit_form' ) ) {
         if ( $result === false ) {
             wp_send_json_error( array( 'mensaje' => 'Error al guardar el registro. Intenta de nuevo.' ) );
         }
+        
+        $registro_id = $wpdb->insert_id;
+
+        // Guardar detalles (opciones de menú por día)
+        foreach ( $menus_seleccionados as $dia => $menu_valor ) {
+            $partes      = explode( '##', $menu_valor, 2 );
+            $menu_titulo = trim( isset( $partes[0] ) ? $partes[0] : $menu_valor );
+            $menu_desc   = trim( isset( $partes[1] ) ? $partes[1] : '' );
+            
+            $wpdb->insert(
+                $tabla_detalles,
+                array(
+                    'registro_id' => $registro_id,
+                    'dia_semana'  => sanitize_key( $dia ),
+                    'menu_titulo' => $menu_titulo,
+                    'menu_desc'   => $menu_desc,
+                ),
+                array( '%d', '%s', '%s', '%s' )
+            );
+        }
 
         wp_send_json_success( array(
             'mensaje'     => '¡Registro completado!',
             'nombre'      => $nombre,
             'rut'         => $rut,
-            'menu_titulo' => $menu_titulo,
+            'menu_titulo' => 'Selección Semanal',
             'hora'        => $ahora->format( 'H:i' ),
         ) );
     }
@@ -264,24 +281,31 @@ if ( ! function_exists( 'maffer_render_formulario' ) ) {
             }
         }
 
-        // Menús de cena — opción guardada por 7A: maffer_menu_cena
-        $menus_cena_raw = get_option( 'maffer_menu_cena', array() );
-        $menus_json     = array( 'cena' => array() );
-        foreach ( $menus_cena_raw as $idx => $item ) {
-            $titulo = sanitize_text_field( isset( $item['title'] ) ? $item['title'] : '' );
-            $desc   = sanitize_text_field( isset( $item['desc'] )  ? $item['desc']  : '' );
-            if ( empty( $titulo ) ) {
-                continue;
-            }
-            $menus_json['cena'][] = array(
-                'id'     => 'cena_' . $idx,
-                'titulo' => $titulo,
-                'desc'   => $desc,
-                'valor'  => $titulo . ' ## ' . $desc,
-            );
-        }
+        // Menús de cena por día
+        $dias = array('lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo');
+        $menus_json = array();
+        $tiene_cena = false;
 
-        $tiene_cena = ! empty( $menus_json['cena'] );
+        foreach ( $dias as $dia ) {
+            $menus_json[$dia] = array();
+            $menus_raw = get_option( "maffer_menu_cena_{$dia}", array() );
+            foreach ( $menus_raw as $idx => $item ) {
+                $titulo = sanitize_text_field( isset( $item['title'] ) ? $item['title'] : '' );
+                $desc   = sanitize_text_field( isset( $item['desc'] )  ? $item['desc']  : '' );
+                if ( empty( $titulo ) ) {
+                    continue;
+                }
+                $menus_json[$dia][] = array(
+                    'id'     => 'cena_' . $dia . '_' . $idx,
+                    'titulo' => $titulo,
+                    'desc'   => $desc,
+                    'valor'  => $titulo . ' ## ' . $desc,
+                );
+            }
+            if ( ! empty( $menus_json[$dia] ) ) {
+                $tiene_cena = true;
+            }
+        }
 
         ob_start();
         ?>
@@ -419,30 +443,41 @@ if ( ! function_exists( 'maffer_render_formulario' ) ) {
                         <?php if ( ! $tiene_cena ) : ?>
                             <div class="maffer-empty-menu">No hay menús de cena configurados por el momento.</div>
                         <?php else : ?>
-                            <div class="maffer-menu-list" role="radiogroup" aria-label="Menú de cena">
-                                <?php foreach ( $menus_json['cena'] as $menu ) : ?>
-                                <button type="button" class="maffer-menu-card"
-                                    data-valor="<?php echo esc_attr( $menu['valor'] ); ?>"
-                                    data-id="<?php echo esc_attr( $menu['id'] ); ?>"
-                                    role="radio" aria-checked="false">
-                                    <div class="maffer-card-head">
-                                        <div>
-                                            <div class="maffer-card-title"><?php echo esc_html( $menu['titulo'] ); ?></div>
-                                            <?php if ( ! empty( $menu['desc'] ) ) : ?>
-                                            <div class="maffer-card-desc"><?php echo esc_html( $menu['desc'] ); ?></div>
-                                            <?php endif; ?>
-                                        </div>
-                                        <div class="maffer-radio-dot" aria-hidden="true">
-                                            <div class="maffer-radio-inner">
-                                                <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-                                                    <path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                                </svg>
+                            <?php foreach ( $dias as $dia ) : ?>
+                            <div class="maffer-dia-group" style="margin-bottom:24px;">
+                                <div class="maffer-dia-label" style="font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:800;color:var(--orange-600);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid var(--border);padding-bottom:4px;">
+                                    Cena · <?php echo esc_html( $dia ); ?>
+                                </div>
+                                <?php if ( empty( $menus_json[$dia] ) ) : ?>
+                                    <div class="maffer-empty-menu" style="padding:10px;font-size:13px;">No hay servicio de cena este día.</div>
+                                <?php else : ?>
+                                    <div class="maffer-menu-list maffer-menu-dia-list" data-dia="<?php echo esc_attr($dia); ?>" role="radiogroup" aria-label="Menú de cena <?php echo esc_attr($dia); ?>">
+                                        <?php foreach ( $menus_json[$dia] as $menu ) : ?>
+                                        <button type="button" class="maffer-menu-card"
+                                            data-valor="<?php echo esc_attr( $menu['valor'] ); ?>"
+                                            data-id="<?php echo esc_attr( $menu['id'] ); ?>"
+                                            role="radio" aria-checked="false">
+                                            <div class="maffer-card-head">
+                                                <div>
+                                                    <div class="maffer-card-title"><?php echo esc_html( $menu['titulo'] ); ?></div>
+                                                    <?php if ( ! empty( $menu['desc'] ) ) : ?>
+                                                    <div class="maffer-card-desc"><?php echo esc_html( $menu['desc'] ); ?></div>
+                                                    <?php endif; ?>
+                                                </div>
+                                                <div class="maffer-radio-dot" aria-hidden="true">
+                                                    <div class="maffer-radio-inner">
+                                                        <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                                                            <path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                        </svg>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
+                                        </button>
+                                        <?php endforeach; ?>
                                     </div>
-                                </button>
-                                <?php endforeach; ?>
+                                <?php endif; ?>
                             </div>
+                            <?php endforeach; ?>
                         <?php endif; ?>
                         <div class="maffer-field-hint" id="hint-menu"></div>
                     </div>
@@ -690,9 +725,15 @@ if ( ! function_exists( 'maffer_render_formulario' ) ) {
             var CLIENT_NOW_UNIX = Math.floor(Date.now() / 1000);
             var TIME_OFFSET     = SERVER_NOW_UNIX - CLIENT_NOW_UNIX;
 
+            var DIAS_DISPONIBLES = <?php 
+                $dias_disp = array();
+                foreach($dias as $d) { if(!empty($menus_json[$d])) $dias_disp[] = $d; }
+                echo json_encode($dias_disp); 
+            ?>;
+
             var state = {
                 rutValido:    false,
-                menuValor:    '',
+                menuValores:  {},
                 nombreValido: false,
                 terminosOk:   false,
             };
@@ -745,13 +786,15 @@ if ( ! function_exists( 'maffer_render_formulario' ) ) {
                 // Menú
                 document.querySelectorAll('.maffer-menu-card').forEach(function(card) {
                     card.addEventListener('click', function() {
-                        document.querySelectorAll('.maffer-menu-card').forEach(function(c) {
+                        var list = this.closest('.maffer-menu-dia-list');
+                        var dia = list.dataset.dia;
+                        list.querySelectorAll('.maffer-menu-card').forEach(function(c) {
                             c.classList.remove('selected');
                             c.setAttribute('aria-checked','false');
                         });
                         this.classList.add('selected');
                         this.setAttribute('aria-checked','true');
-                        state.menuValor = this.dataset.valor;
+                        state.menuValores[dia] = this.dataset.valor;
                         clearFieldError('menu');
                         updateSubmitButton();
                     });
@@ -770,7 +813,8 @@ if ( ! function_exists( 'maffer_render_formulario' ) ) {
                     var valid = true;
                     if (!validateNombre(inputNombre.value)) valid = false;
                     if (!state.rutValido) { setFieldError('rut','Por favor verifica el RUT antes de enviar.'); valid = false; }
-                    if (!state.menuValor) { setMenuError('Debes seleccionar un menú.'); valid = false; }
+                    var faltan = DIAS_DISPONIBLES.some(function(d) { return !state.menuValores[d]; });
+                    if (faltan) { setMenuError('Debes seleccionar un menú para todos los días.'); valid = false; }
                     if (!state.terminosOk) { setCheckError('terminos','Debes aceptar las condiciones.'); valid = false; }
                     if (!valid) return;
                     submitForm(form, btnSubmit);
@@ -785,7 +829,7 @@ if ( ! function_exists( 'maffer_render_formulario' ) ) {
                 data.append('nonce',        NONCE);
                 data.append('nombre',       document.getElementById('maffer-nombre').value.trim());
                 data.append('rut',          document.getElementById('maffer-rut').value.trim());
-                data.append('menu',         state.menuValor);
+                data.append('menus',        JSON.stringify(state.menuValores));
                 data.append('observaciones',document.getElementById('maffer-observaciones').value.trim());
                 data.append('terminos',     document.getElementById('maffer-terminos').checked ? '1' : '');
 
@@ -869,7 +913,8 @@ if ( ! function_exists( 'maffer_render_formulario' ) ) {
             // ── Helpers ──────────────────────────────────────────
             function updateSubmitButton() {
                 var btn   = document.getElementById('maffer-submit-btn');
-                var ready = state.nombreValido && state.rutValido && state.menuValor && state.terminosOk;
+                var todosLosDiasSeleccionados = DIAS_DISPONIBLES.length > 0 && !DIAS_DISPONIBLES.some(function(d) { return !state.menuValores[d]; });
+                var ready = state.nombreValido && state.rutValido && todosLosDiasSeleccionados && state.terminosOk;
                 btn.disabled = !ready;
                 btn.classList.toggle('maffer-btn-disabled', !ready);
             }

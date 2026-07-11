@@ -39,8 +39,9 @@ class Maffer_Activator {
     private static function create_or_upgrade_table() {
         global $wpdb;
 
-        $tabla   = $wpdb->prefix . 'maffer_registros';
-        $charset = $wpdb->get_charset_collate();
+        $tabla          = $wpdb->prefix . 'maffer_registros';
+        $tabla_detalles = $wpdb->prefix . 'maffer_registro_detalles';
+        $charset        = $wpdb->get_charset_collate();
 
         $sql = "CREATE TABLE {$tabla} (
             id            BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -58,10 +59,21 @@ class Maffer_Activator {
             KEY idx_rut_fecha (rut, fecha)
         ) {$charset};";
 
+        $sql_detalles = "CREATE TABLE {$tabla_detalles} (
+            id            BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            registro_id   BIGINT(20) UNSIGNED NOT NULL,
+            dia_semana    VARCHAR(20)         NOT NULL,
+            menu_titulo   VARCHAR(200)        NOT NULL,
+            menu_desc     TEXT,
+            PRIMARY KEY  (id),
+            KEY idx_registro (registro_id)
+        ) {$charset};";
+
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
         dbDelta( $sql );
+        dbDelta( $sql_detalles );
 
-        update_option( 'maffer_db_version', '1.2' );
+        update_option( 'maffer_db_version', '1.3' );
     }
 
     /**

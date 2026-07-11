@@ -127,14 +127,17 @@ if ( ! function_exists( 'maffer_enviar_resumen' ) ) {
 		global $wpdb;
 		$tabla = $wpdb->prefix . 'maffer_registros';
 
+		$tabla_d = $wpdb->prefix . 'maffer_registro_detalles';
+
 		if ( $fecha_ciclo ) {
 			$rows = $wpdb->get_results(
 				$wpdb->prepare(
-					"SELECT nombre, rut, menu_titulo, observaciones, hora, fecha
-					 FROM {$tabla}
-					 WHERE fecha >= %s
-					   AND ( deleted_at IS NULL OR deleted_at = '0000-00-00 00:00:00' )
-					 ORDER BY fecha ASC, id ASC",
+					"SELECT r.nombre, r.rut, COALESCE(d.menu_titulo, r.menu_titulo) as menu_titulo, r.observaciones, r.hora, r.fecha, d.dia_semana
+					 FROM {$tabla} r
+					 LEFT JOIN {$tabla_d} d ON r.id = d.registro_id
+					 WHERE r.fecha >= %s
+					   AND ( r.deleted_at IS NULL OR r.deleted_at = '0000-00-00 00:00:00' )
+					 ORDER BY r.fecha ASC, r.id ASC, FIELD(d.dia_semana, 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo') ASC",
 					$fecha_ciclo
 				),
 				ARRAY_A
@@ -142,11 +145,12 @@ if ( ! function_exists( 'maffer_enviar_resumen' ) ) {
 		} else {
 			$rows = $wpdb->get_results(
 				$wpdb->prepare(
-					"SELECT nombre, rut, menu_titulo, observaciones, hora, fecha
-					 FROM {$tabla}
-					 WHERE fecha = %s
-					   AND ( deleted_at IS NULL OR deleted_at = '0000-00-00 00:00:00' )
-					 ORDER BY id ASC",
+					"SELECT r.nombre, r.rut, COALESCE(d.menu_titulo, r.menu_titulo) as menu_titulo, r.observaciones, r.hora, r.fecha, d.dia_semana
+					 FROM {$tabla} r
+					 LEFT JOIN {$tabla_d} d ON r.id = d.registro_id
+					 WHERE r.fecha = %s
+					   AND ( r.deleted_at IS NULL OR r.deleted_at = '0000-00-00 00:00:00' )
+					 ORDER BY r.fecha ASC, r.id ASC, FIELD(d.dia_semana, 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo') ASC",
 					$hoy
 				),
 				ARRAY_A
@@ -228,13 +232,16 @@ if ( ! function_exists( 'maffer_admin_enviar_correo_detalle' ) ) {
 		global $wpdb;
 		$tabla = $wpdb->prefix . 'maffer_registros';
 
+		$tabla_d = $wpdb->prefix . 'maffer_registro_detalles';
+
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT nombre, rut, menu_titulo, observaciones, hora, fecha
-				 FROM {$tabla}
-				 WHERE fecha >= %s
-				   AND ( deleted_at IS NULL OR deleted_at = '0000-00-00 00:00:00' )
-				 ORDER BY fecha ASC, id ASC",
+				"SELECT r.nombre, r.rut, COALESCE(d.menu_titulo, r.menu_titulo) as menu_titulo, r.observaciones, r.hora, r.fecha, d.dia_semana
+				 FROM {$tabla} r
+				 LEFT JOIN {$tabla_d} d ON r.id = d.registro_id
+				 WHERE r.fecha >= %s
+				   AND ( r.deleted_at IS NULL OR r.deleted_at = '0000-00-00 00:00:00' )
+				 ORDER BY r.fecha ASC, r.id ASC, FIELD(d.dia_semana, 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo') ASC",
 				$fecha_ciclo
 			),
 			ARRAY_A
@@ -261,11 +268,14 @@ if ( ! function_exists( 'maffer_admin_enviar_correo_detalle' ) ) {
 			$fecha_fila = ! empty( $r['fecha'] )
 				? date( 'd/m/Y', strtotime( $r['fecha'] ) )
 				: '—';
+			$dia_fila = ! empty( $r['dia_semana'] ) ? ucfirst( $r['dia_semana'] ) : '—';
 			$filas_html .= '<tr>'
 				. '<td style="padding:6px 10px;border-bottom:1px solid #f0e8d8">'
 					. esc_html( $r['nombre'] ) . '</td>'
 				. '<td style="padding:6px 10px;border-bottom:1px solid #f0e8d8;font-family:monospace">'
 					. esc_html( $r['rut'] ) . '</td>'
+				. '<td style="padding:6px 10px;border-bottom:1px solid #f0e8d8">'
+					. esc_html( $dia_fila ) . '</td>'
 				. '<td style="padding:6px 10px;border-bottom:1px solid #f0e8d8">'
 					. esc_html( $r['menu_titulo'] ) . '</td>'
 				. '<td style="padding:6px 10px;border-bottom:1px solid #f0e8d8;text-align:center">'
@@ -275,7 +285,7 @@ if ( ! function_exists( 'maffer_admin_enviar_correo_detalle' ) ) {
 				. '</tr>';
 		}
 
-		$body = '<div style="font-family:Arial,sans-serif;font-size:13px;color:#333;max-width:640px">'
+		$body = '<div style="font-family:Arial,sans-serif;font-size:13px;color:#333;max-width:680px">'
 			. '<div style="background:#E67E22;padding:20px 24px;border-radius:10px 10px 0 0">'
 			. '<h2 style="margin:0;color:#fff;font-size:18px">Servicio de Alimentación Maffer</h2>'
 			. '<p style="margin:4px 0 0;color:rgba(255,255,255,.85);font-size:12px">Resumen del ciclo — Cena</p>'
@@ -287,6 +297,7 @@ if ( ! function_exists( 'maffer_admin_enviar_correo_detalle' ) ) {
 			. '<thead><tr style="background:#E67E22;color:#fff">'
 			. '<th style="padding:10px 10px;text-align:left">Nombre</th>'
 			. '<th style="padding:10px 10px;text-align:left">RUT</th>'
+			. '<th style="padding:10px 10px;text-align:left">Día</th>'
 			. '<th style="padding:10px 10px;text-align:left">Menú</th>'
 			. '<th style="padding:10px 10px;text-align:center">Fecha</th>'
 			. '<th style="padding:10px 10px;text-align:center">Hora</th>'

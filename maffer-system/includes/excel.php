@@ -33,8 +33,8 @@ if ( ! function_exists( 'maffer_generar_xlsx' ) ) {
 	 * @return string|false Path to the generated temp file, or false on failure.
 	 */
 	function maffer_generar_xlsx( $rows, $label ) {
-		$cabeceras  = array( 'Nombre', 'RUT', 'Menu', 'Observaciones', 'Hora', 'Fecha' );
-		$col_letras = array( 'A', 'B', 'C', 'D', 'E', 'F' );
+		$cabeceras  = array( 'Nombre', 'RUT', 'Día', 'Menu', 'Observaciones', 'Hora', 'Fecha' );
+		$col_letras = array( 'A', 'B', 'C', 'D', 'E', 'F', 'G' );
 
 		$strings = array();
 		$str_idx = array();
@@ -56,6 +56,7 @@ if ( ! function_exists( 'maffer_generar_xlsx' ) ) {
 			$fi   = array();
 			$fi[] = $agregar( $r['nombre'] );
 			$fi[] = $agregar( $r['rut'] );
+			$fi[] = $agregar( ucfirst( isset( $r['dia_semana'] ) ? $r['dia_semana'] : '' ) );
 			$fi[] = $agregar( $r['menu_titulo'] );
 			$fi[] = $agregar( isset( $r['observaciones'] ) ? $r['observaciones'] : '' );
 			$fi[] = $agregar( substr( $r['hora'], 0, 5 ) );

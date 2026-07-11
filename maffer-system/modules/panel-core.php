@@ -352,19 +352,22 @@ if ( ! function_exists( 'maffer_v6_procesar' ) ) {
 			wp_die( 'Sin permisos.' );
 		}
 
-		// ── Save Cena menus ────────────────────────────────────────────
 		if ( 'guardar_menus' === $accion ) {
-			$titles = isset( $_POST['maffer_titles_cena'] ) ? (array) $_POST['maffer_titles_cena'] : array();
-			$descs  = isset( $_POST['maffer_descs_cena'] )  ? (array) $_POST['maffer_descs_cena']  : array();
-			$data   = array();
-			for ( $i = 0; $i < count( $titles ); $i++ ) {
-				$t = sanitize_text_field( isset( $titles[ $i ] ) ? $titles[ $i ] : '' );
-				$d = sanitize_textarea_field( isset( $descs[ $i ] ) ? $descs[ $i ] : '' );
-				if ( trim( $t ) !== '' ) {
-					$data[] = array( 'title' => $t, 'desc' => $d );
+			$dias = array( 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo' );
+
+			foreach ( $dias as $dia ) {
+				$titles = isset( $_POST["maffer_titles_cena_{$dia}"] ) ? (array) $_POST["maffer_titles_cena_{$dia}"] : array();
+				$descs  = isset( $_POST["maffer_descs_cena_{$dia}"] )  ? (array) $_POST["maffer_descs_cena_{$dia}"]  : array();
+				$data   = array();
+				for ( $i = 0; $i < count( $titles ); $i++ ) {
+					$t = sanitize_text_field( isset( $titles[ $i ] ) ? $titles[ $i ] : '' );
+					$d = sanitize_textarea_field( isset( $descs[ $i ] ) ? $descs[ $i ] : '' );
+					if ( trim( $t ) !== '' ) {
+						$data[] = array( 'title' => $t, 'desc' => $d );
+					}
 				}
+				update_option( "maffer_menu_cena_{$dia}", $data );
 			}
-			update_option( 'maffer_menu_cena', $data );
 			maffer_limpiar_cache();
 			wp_redirect( admin_url( 'admin.php?page=maffer-panel&panel=menus&msg=menus_ok' ) );
 			exit;
@@ -434,17 +437,23 @@ if ( ! function_exists( 'maffer_admin_guardar_menus' ) ) {
 		}
 		check_admin_referer( 'maffer_admin_action' );
 
-		$titles = isset( $_POST['maffer_titles_cena'] ) ? (array) $_POST['maffer_titles_cena'] : array();
-		$descs  = isset( $_POST['maffer_descs_cena'] )  ? (array) $_POST['maffer_descs_cena']  : array();
-		$data   = array();
-		for ( $i = 0; $i < count( $titles ); $i++ ) {
-			$t = sanitize_text_field( isset( $titles[ $i ] ) ? $titles[ $i ] : '' );
-			$d = sanitize_textarea_field( isset( $descs[ $i ] ) ? $descs[ $i ] : '' );
-			if ( trim( $t ) !== '' ) {
-				$data[] = array( 'title' => $t, 'desc' => $d );
+		$dias = array( 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo' );
+
+		foreach ( $dias as $dia ) {
+			$titles = isset( $_POST["maffer_titles_cena_{$dia}"] ) ? (array) $_POST["maffer_titles_cena_{$dia}"] : array();
+			$descs  = isset( $_POST["maffer_descs_cena_{$dia}"] )  ? (array) $_POST["maffer_descs_cena_{$dia}"]  : array();
+			$data   = array();
+			
+			for ( $i = 0; $i < count( $titles ); $i++ ) {
+				$t = sanitize_text_field( isset( $titles[ $i ] ) ? $titles[ $i ] : '' );
+				$d = sanitize_textarea_field( isset( $descs[ $i ] ) ? $descs[ $i ] : '' );
+				if ( trim( $t ) !== '' ) {
+					$data[] = array( 'title' => $t, 'desc' => $d );
+				}
 			}
+			update_option( "maffer_menu_cena_{$dia}", $data );
 		}
-		update_option( 'maffer_menu_cena', $data );
+
 		maffer_limpiar_cache();
 
 		wp_redirect( admin_url( 'admin.php?page=maffer-panel&panel=menus&msg=menus_ok' ) );

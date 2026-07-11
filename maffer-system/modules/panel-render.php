@@ -98,11 +98,25 @@ function maffer_v6_render() {
     $fecha_ciclo = function_exists( 'maffer_get_fecha_ciclo' ) ? maffer_get_fecha_ciclo() : null;
     $fecha_desde = $fecha_ciclo ?: $hoy;
 
-    // Correo y menús (solo Cena)
+    // Correo y menús (solo Cena) por día
     $correo     = get_option( 'maffer_correo_destino', get_option( 'admin_email' ) );
-    $menus_cena = get_option( 'maffer_menu_cena', array() );
-    if ( empty( $menus_cena ) ) {
-        $menus_cena = array( array( 'title' => '', 'desc' => '' ) );
+    
+    $dias = array('lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo');
+    $dias_lbl = array(
+        'lunes'     => 'Lunes',
+        'martes'    => 'Martes',
+        'miercoles' => 'Miércoles',
+        'jueves'    => 'Jueves',
+        'viernes'   => 'Viernes',
+        'sabado'    => 'Sábado',
+        'domingo'   => 'Domingo'
+    );
+    $menus_por_dia = array();
+    foreach ($dias as $dia) {
+        $menus_por_dia[$dia] = get_option( "maffer_menu_cena_{$dia}", array() );
+        if ( empty( $menus_por_dia[$dia] ) ) {
+            $menus_por_dia[$dia] = array( array( 'title' => '', 'desc' => '' ) );
+        }
     }
 
     $panel = isset( $_GET['panel'] ) ? sanitize_key( $_GET['panel'] ) : '';
@@ -116,15 +130,37 @@ function maffer_v6_render() {
     $dist      = array();
 
     if ( $t_exist ) {
-        $total     = (int) $wpdb->get_var( $wpdb->prepare(
-            "SELECT COUNT(*) FROM {$tabla} WHERE fecha >= %s AND (deleted_at IS NULL OR deleted_at = '0000-00-00 00:00:00')", $fecha_desde
+        $tabla_d = $wpdb->prefix . 'maffer_registro_detalles';
+        $total = (int) $wpdb->get_var( $wpdb->prepare(
+            "SELECT COUNT(*) FROM {$tabla} r LEFT JOIN {$tabla_d} d ON r.id = d.registro_id WHERE r.fecha >= %s AND (r.deleted_at IS NULL OR r.deleted_at = '0000-00-00 00:00:00')", $fecha_desde
         ) );
-        $registros = $wpdb->get_results( $wpdb->prepare(
-            "SELECT * FROM {$tabla} WHERE fecha >= %s AND (deleted_at IS NULL OR deleted_at = '0000-00-00 00:00:00') ORDER BY fecha DESC, id DESC", $fecha_desde
+        $registros_raw = $wpdb->get_results( $wpdb->prepare(
+            "SELECT r.id, r.fecha, r.hora, r.nombre, r.rut, r.observaciones, d.dia_semana, COALESCE(d.menu_titulo, r.menu_titulo) as menu_titulo 
+             FROM {$tabla} r 
+             LEFT JOIN {$tabla_d} d ON r.id = d.registro_id 
+             WHERE r.fecha >= %s AND (r.deleted_at IS NULL OR r.deleted_at = '0000-00-00 00:00:00') 
+             ORDER BY r.fecha DESC, r.id DESC, FIELD(d.dia_semana, 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo') ASC", 
+             $fecha_desde
         ), ARRAY_A );
+        $agrupados_r = array();
+        foreach ( $registros_raw as $r ) {
+            $id = $r['id'];
+            if ( ! isset( $agrupados_r[$id] ) ) {
+                $agrupados_r[$id] = $r;
+                $agrupados_r[$id]['selecciones'] = array();
+            }
+            if ( ! empty( $r['dia_semana'] ) ) {
+                $agrupados_r[$id]['selecciones'][] = array( 'dia' => $r['dia_semana'], 'menu' => $r['menu_titulo'] );
+            } elseif ( ! empty( $r['menu_titulo'] ) ) {
+                $agrupados_r[$id]['selecciones'][] = array( 'dia' => 'Semana', 'menu' => $r['menu_titulo'] );
+            }
+        }
+        $registros = array_values( $agrupados_r );
         $dist_raw  = $wpdb->get_results( $wpdb->prepare(
-            "SELECT menu_titulo, COUNT(*) cnt FROM {$tabla}
-             WHERE fecha >= %s AND (deleted_at IS NULL OR deleted_at = '0000-00-00 00:00:00') GROUP BY menu_titulo ORDER BY cnt DESC", $fecha_desde
+            "SELECT COALESCE(d.menu_seleccionado, r.menu_titulo) as menu_titulo, COUNT(*) cnt FROM {$tabla} r 
+             LEFT JOIN {$tabla_d} d ON r.id = d.registro_id 
+             WHERE r.fecha >= %s AND (r.deleted_at IS NULL OR r.deleted_at = '0000-00-00 00:00:00') 
+             GROUP BY COALESCE(d.menu_seleccionado, r.menu_titulo) ORDER BY cnt DESC", $fecha_desde
         ), ARRAY_A );
         foreach ( $dist_raw as $d ) {
             $dist[ $d['menu_titulo'] ] = (int) $d['cnt'];
@@ -415,31 +451,40 @@ function maffer_v6_render() {
             <input type="hidden" name="action" value="maffer_guardar_menus">
             <input type="hidden" name="maffer_accion" value="guardar_menus">
 
-            <div id="m6icnt-cena">
-                <?php foreach ( $menus_cena as $idx => $m ) : ?>
-                <div class="m6mi">
-                    <div class="m6mih">
-                        <span class="m6min">Menú <?php echo $idx + 1; ?></span>
-                        <button type="button" class="m6rm" onclick="m6rm(this)">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                            Eliminar
-                        </button>
+            <style>
+                .m6-dia-box { background:var(--sf2); border:1px solid var(--bdr); border-radius:12px; padding:16px; margin-bottom:16px; }
+                .m6-dia-title { font-family:'Plus Jakarta Sans',sans-serif; font-weight:700; font-size:16px; margin-bottom:12px; text-transform:capitalize; }
+            </style>
+            <?php foreach ( $dias as $dia ) : ?>
+            <div class="m6-dia-box">
+                <div class="m6-dia-title"><?php echo esc_html( $dias_lbl[$dia] ); ?></div>
+                <div id="m6icnt-cena-<?php echo esc_attr( $dia ); ?>">
+                    <?php foreach ( $menus_por_dia[$dia] as $idx => $m ) : ?>
+                    <div class="m6mi">
+                        <div class="m6mih">
+                            <span class="m6min">Menú <?php echo $idx + 1; ?></span>
+                            <button type="button" class="m6rm" onclick="m6rm(this, '<?php echo esc_js( $dia ); ?>')">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                Eliminar
+                            </button>
+                        </div>
+                        <div class="m6fd">
+                            <label class="m6lb">Titulo *</label>
+                            <input type="text" name="maffer_titles_cena_<?php echo esc_attr( $dia ); ?>[]" class="m6in" placeholder="Ej: Menú Cena Ligera" value="<?php echo esc_attr( $m['title'] ); ?>" required>
+                        </div>
+                        <div class="m6fd">
+                            <label class="m6lb">Descripcion (visible en el formulario)</label>
+                            <textarea name="maffer_descs_cena_<?php echo esc_attr( $dia ); ?>[]" class="m6ta" placeholder="Ej: Sopa, sandwich, postre"><?php echo esc_textarea( $m['desc'] ); ?></textarea>
+                        </div>
                     </div>
-                    <div class="m6fd">
-                        <label class="m6lb">Titulo *</label>
-                        <input type="text" name="maffer_titles_cena[]" class="m6in" placeholder="Ej: Menú Cena Ligera" value="<?php echo esc_attr( $m['title'] ); ?>" required>
-                    </div>
-                    <div class="m6fd">
-                        <label class="m6lb">Descripcion (visible en el formulario)</label>
-                        <textarea name="maffer_descs_cena[]" class="m6ta" placeholder="Ej: Sopa, sandwich, postre"><?php echo esc_textarea( $m['desc'] ); ?></textarea>
-                    </div>
+                    <?php endforeach; ?>
                 </div>
-                <?php endforeach; ?>
+                <button type="button" class="m6ab2" onclick="m6add('<?php echo esc_js( $dia ); ?>')">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Agregar opción de menú (<?php echo esc_html( $dia ); ?>)
+                </button>
             </div>
-            <button type="button" class="m6ab2" onclick="m6add()">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Agregar opción de menú
-            </button>
+            <?php endforeach; ?>
             <button type="submit" class="btn-s full" style="margin-top:8px">Guardar menús de cena</button>
         </form>
     </div>
@@ -460,17 +505,32 @@ function maffer_v6_render() {
         $ciclo_fin = $dt_fin->format( 'Y-m-d' );
 
         if ( $t_exist ) {
-            $regs_ciclo = $wpdb->get_results( $wpdb->prepare(
-                "SELECT * FROM {$tabla}
-                 WHERE DATE_SUB(fecha, INTERVAL (WEEKDAY(fecha)+2)%%7 DAY) = %s
-                 AND (deleted_at IS NULL OR deleted_at = '0000-00-00 00:00:00')
-                 ORDER BY fecha ASC, id ASC",
+            $tabla_d = $wpdb->prefix . 'maffer_registro_detalles';
+            $regs_ciclo_raw = $wpdb->get_results( $wpdb->prepare(
+                "SELECT r.id, r.fecha, r.hora, r.nombre, r.rut, r.observaciones, d.dia_semana, COALESCE(d.menu_titulo, r.menu_titulo) as menu_titulo 
+                 FROM {$tabla} r LEFT JOIN {$tabla_d} d ON r.id = d.registro_id
+                 WHERE DATE_SUB(r.fecha, INTERVAL (WEEKDAY(r.fecha)+2)%%7 DAY) = %s
+                 AND (r.deleted_at IS NULL OR r.deleted_at = '0000-00-00 00:00:00')
+                 ORDER BY r.fecha ASC, r.id ASC, FIELD(d.dia_semana, 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo') ASC",
                 $ciclo_sel
             ), ARRAY_A );
-            foreach ( $regs_ciclo as $r ) {
+            $agrupados_c = array();
+            foreach ( $regs_ciclo_raw as $r ) {
                 $mn = $r['menu_titulo'] ?: 'Sin titulo';
                 $dist_ciclo[ $mn ] = isset( $dist_ciclo[ $mn ] ) ? $dist_ciclo[ $mn ] + 1 : 1;
+                
+                $id = $r['id'];
+                if ( ! isset( $agrupados_c[$id] ) ) {
+                    $agrupados_c[$id] = $r;
+                    $agrupados_c[$id]['selecciones'] = array();
+                }
+                if ( ! empty( $r['dia_semana'] ) ) {
+                    $agrupados_c[$id]['selecciones'][] = array( 'dia' => $r['dia_semana'], 'menu' => $r['menu_titulo'] );
+                } elseif ( ! empty( $r['menu_titulo'] ) ) {
+                    $agrupados_c[$id]['selecciones'][] = array( 'dia' => 'Semana', 'menu' => $r['menu_titulo'] );
+                }
             }
+            $regs_ciclo = array_values( $agrupados_c );
         }
     }
 
@@ -479,12 +539,12 @@ function maffer_v6_render() {
     if ( $t_exist ) {
         $ciclos_lista = $wpdb->get_results( $wpdb->prepare(
             "SELECT
-                DATE_SUB(fecha, INTERVAL (WEEKDAY(fecha)+2)%7 DAY) AS ciclo_inicio,
-                COUNT(*) AS total,
-                MIN(fecha) AS primer_dia,
-                MAX(fecha) AS ultimo_dia
-             FROM {$tabla}
-             WHERE (deleted_at IS NULL OR deleted_at = '0000-00-00 00:00:00')
+                DATE_SUB(r.fecha, INTERVAL (WEEKDAY(r.fecha)+2)%7 DAY) AS ciclo_inicio,
+                COUNT(DISTINCT r.id) AS total,
+                MIN(r.fecha) AS primer_dia,
+                MAX(r.fecha) AS ultimo_dia
+             FROM {$tabla} r
+             WHERE (r.deleted_at IS NULL OR r.deleted_at = '0000-00-00 00:00:00')
              GROUP BY ciclo_inicio
              ORDER BY ciclo_inicio DESC"
         ), ARRAY_A );
@@ -566,15 +626,26 @@ function maffer_v6_render() {
                 </tr></thead>
                 <tbody>
                 <?php foreach ( $regs_ciclo as $reg ) :
-                    $mi = array_search( $reg['menu_titulo'], array_keys( $dist_ciclo ), true );
-                    $mc = $menu_colors[ ( $mi !== false ? $mi : 0 ) % count( $menu_colors ) ];
                     $f_row = ! empty( $reg['fecha'] ) ? ( new DateTime( $reg['fecha'] ) )->format('d/m') : '—'; ?>
                 <tr>
                     <td class="m6mn m6mt"><?php echo esc_html( $f_row ); ?></td>
                     <td class="m6mn"><?php echo esc_html( substr( $reg['hora'], 0, 5 ) ); ?></td>
                     <td class="m6nm"><?php echo esc_html( $reg['nombre'] ); ?></td>
                     <td class="m6mn m6mt"><?php echo esc_html( $reg['rut'] ); ?></td>
-                    <td><span class="m6pll"><i style="background:<?php echo esc_attr( $mc ); ?>"></i><?php echo esc_html( $reg['menu_titulo'] ?: 'Sin titulo' ); ?></span></td>
+                    <td>
+                        <div style="display:flex;gap:4px;flex-wrap:wrap">
+                            <?php if ( ! empty( $reg['selecciones'] ) ) : ?>
+                                <?php foreach ( $reg['selecciones'] as $sel ) : 
+                                    $mi_s = array_search( $sel['menu'], array_keys( $dist_ciclo ), true );
+                                    $mc_s = $menu_colors[ ( $mi_s !== false ? $mi_s : 0 ) % count( $menu_colors ) ];
+                                ?>
+                                <span class="m6pll" style="padding-left:6px;padding-right:8px;font-size:11px"><i style="background:<?php echo esc_attr( $mc_s ); ?>;width:6px;height:6px;margin-right:4px"></i><strong style="text-transform:capitalize;margin-right:4px;color:var(--ink2)"><?php echo esc_html( substr( $sel['dia'], 0, 2 ) ); ?>:</strong><?php echo esc_html( $sel['menu'] ?: 'Sin titulo' ); ?></span>
+                                <?php endforeach; ?>
+                            <?php else : ?>
+                                <span class="m6pll"><i style="background:#ccc"></i>Sin título</span>
+                            <?php endif; ?>
+                        </div>
+                    </td>
                     <td style="font-size:12px;color:var(--ink3)"><?php echo esc_html( $reg['observaciones'] ?: '—' ); ?></td>
                 </tr>
                 <?php endforeach; ?>
@@ -923,17 +994,29 @@ function maffer_v6_render() {
                     <tr><td colspan="6" class="m6emp">No hay registros en el ciclo actual.</td></tr>
                 <?php else : ?>
                     <?php foreach ( $registros as $reg ) :
-                        $mi    = array_search( $reg['menu_titulo'], array_keys( $dist ), true );
-                        $mc    = $menu_colors[ ( $mi !== false ? $mi : 0 ) % count( $menu_colors ) ];
                         $f_row = isset( $reg['fecha'] ) ? ( new DateTime( $reg['fecha'] ) )->format('d/m') : '—';
+                        $data_m = isset( $reg['selecciones'] ) ? implode( ' ', array_column( $reg['selecciones'], 'menu' ) ) : $reg['menu_titulo'];
                     ?>
                     <tr data-q="<?php echo esc_attr( strtolower( $reg['nombre'] . ' ' . $reg['rut'] ) ); ?>"
-                        data-m="<?php echo esc_attr( strtolower( $reg['menu_titulo'] ) ); ?>">
+                        data-m="<?php echo esc_attr( strtolower( $data_m ) ); ?>">
                         <td class="m6mn m6mt"><?php echo esc_html( $f_row ); ?></td>
                         <td class="m6mn"><?php echo esc_html( substr( $reg['hora'], 0, 5 ) ); ?></td>
                         <td class="m6nm"><?php echo esc_html( $reg['nombre'] ); ?></td>
                         <td class="m6mn m6mt"><?php echo esc_html( $reg['rut'] ); ?></td>
-                        <td><span class="m6pll"><i style="background:<?php echo esc_attr( $mc ); ?>"></i><?php echo esc_html( $reg['menu_titulo'] ?: 'Sin titulo' ); ?></span></td>
+                        <td>
+                            <div style="display:flex;gap:4px;flex-wrap:wrap">
+                                <?php if ( ! empty( $reg['selecciones'] ) ) : ?>
+                                    <?php foreach ( $reg['selecciones'] as $sel ) : 
+                                        $mi_s = array_search( $sel['menu'], array_keys( $dist ), true );
+                                        $mc_s = $menu_colors[ ( $mi_s !== false ? $mi_s : 0 ) % count( $menu_colors ) ];
+                                    ?>
+                                    <span class="m6pll" style="padding-left:6px;padding-right:8px;font-size:11px"><i style="background:<?php echo esc_attr( $mc_s ); ?>;width:6px;height:6px;margin-right:4px"></i><strong style="text-transform:capitalize;margin-right:4px;color:var(--ink2)"><?php echo esc_html( substr( $sel['dia'], 0, 2 ) ); ?>:</strong><?php echo esc_html( $sel['menu'] ?: 'Sin titulo' ); ?></span>
+                                    <?php endforeach; ?>
+                                <?php else : ?>
+                                    <span class="m6pll"><i style="background:#ccc"></i>Sin título</span>
+                                <?php endif; ?>
+                            </div>
+                        </td>
                         <td>
                             <div style="display:flex;align-items:center;justify-content:center;gap:6px">
                                 <button type="button" title="Editar"
@@ -1338,26 +1421,30 @@ function maffer_v6_render() {
         };
 
         // ── Gestión de menús (agregar / eliminar filas) ──────
-        window.m6rm = function(btn) {
-            var cnt = '#m6icnt-cena';
-            if ($(cnt + ' .m6mi').length <= 1) { alert('Debe haber al menos un menú.'); return; }
-            $(btn).closest('.m6mi').remove(); _renum();
+        window.m6rm = function(btn, dia) {
+            var cnt = '#m6icnt-cena-' + dia;
+            if ($(cnt + ' .m6mi').length <= 1) { 
+                var diasL = {lunes:'Lunes',martes:'Martes',miercoles:'Miércoles',jueves:'Jueves',viernes:'Viernes',sabado:'Sábado',domingo:'Domingo'};
+                if (!confirm('Si eliminas esta opción, el día ' + diasL[dia] + ' quedará sin menú (Sin Servicio). ¿Estás seguro?')) return;
+            }
+            $(btn).closest('.m6mi').remove(); _renum(dia);
         };
-        window.m6add = function() {
-            var n = $('#m6icnt-cena .m6mi').length;
+        window.m6add = function(dia) {
+            var cnt = '#m6icnt-cena-' + dia;
+            var n = $(cnt + ' .m6mi').length;
             var html = '<div class="m6mi">'
                 + '<div class="m6mih"><span class="m6min">Menú ' + (n + 1) + '</span>'
-                + '<button type="button" class="m6rm" onclick="m6rm(this)">'
+                + '<button type="button" class="m6rm" onclick="m6rm(this, \'' + dia + '\')">'
                 + '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Eliminar</button></div>'
                 + '<div class="m6fd"><label class="m6lb">Titulo *</label>'
-                + '<input type="text" name="maffer_titles_cena[]" class="m6in" placeholder="Ej: Menú Cena Especial" required></div>'
+                + '<input type="text" name="maffer_titles_cena_' + dia + '[]" class="m6in" placeholder="Ej: Menú Cena Especial" required></div>'
                 + '<div class="m6fd"><label class="m6lb">Descripcion</label>'
-                + '<textarea name="maffer_descs_cena[]" class="m6ta" placeholder="Ej: Sopa, sandwich, postre"></textarea></div>'
+                + '<textarea name="maffer_descs_cena_' + dia + '[]" class="m6ta" placeholder="Ej: Sopa, sandwich, postre"></textarea></div>'
                 + '</div>';
-            $('#m6icnt-cena').append(html);
+            $(cnt).append(html);
         };
-        function _renum() {
-            $('#m6icnt-cena .m6mi').each(function(i) { $(this).find('.m6min').text('Menú ' + (i + 1)); });
+        function _renum(dia) {
+            $('#m6icnt-cena-' + dia + ' .m6mi').each(function(i) { $(this).find('.m6min').text('Menú ' + (i + 1)); });
         }
 
         // ── Formateo de RUT ──────────────────────────────────

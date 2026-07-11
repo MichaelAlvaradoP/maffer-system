@@ -85,15 +85,18 @@ if ( ! function_exists( 'maffer_admin_descargar_excel' ) ) {
 		global $wpdb;
 		$tabla = $wpdb->prefix . 'maffer_registros';
 
+		$tabla_d = $wpdb->prefix . 'maffer_registro_detalles';
+
 		if ( $fecha_hasta ) {
 			$rows = $wpdb->get_results(
 				$wpdb->prepare(
-					"SELECT nombre, rut, menu_titulo, observaciones, hora, fecha
-					 FROM {$tabla}
-					 WHERE fecha >= %s
-					   AND fecha < %s
-					   AND ( deleted_at IS NULL OR deleted_at = '0000-00-00 00:00:00' )
-					 ORDER BY fecha ASC, id ASC",
+					"SELECT r.nombre, r.rut, COALESCE(d.menu_titulo, r.menu_titulo) as menu_titulo, r.observaciones, r.hora, r.fecha, d.dia_semana
+					 FROM {$tabla} r
+					 LEFT JOIN {$tabla_d} d ON r.id = d.registro_id
+					 WHERE r.fecha >= %s
+					   AND r.fecha < %s
+					   AND ( r.deleted_at IS NULL OR r.deleted_at = '0000-00-00 00:00:00' )
+					 ORDER BY r.fecha ASC, r.id ASC, FIELD(d.dia_semana, 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo') ASC",
 					$fecha_desde,
 					$fecha_hasta
 				),
@@ -102,11 +105,12 @@ if ( ! function_exists( 'maffer_admin_descargar_excel' ) ) {
 		} else {
 			$rows = $wpdb->get_results(
 				$wpdb->prepare(
-					"SELECT nombre, rut, menu_titulo, observaciones, hora, fecha
-					 FROM {$tabla}
-					 WHERE fecha >= %s
-					   AND ( deleted_at IS NULL OR deleted_at = '0000-00-00 00:00:00' )
-					 ORDER BY fecha ASC, id ASC",
+					"SELECT r.nombre, r.rut, COALESCE(d.menu_titulo, r.menu_titulo) as menu_titulo, r.observaciones, r.hora, r.fecha, d.dia_semana
+					 FROM {$tabla} r
+					 LEFT JOIN {$tabla_d} d ON r.id = d.registro_id
+					 WHERE r.fecha >= %s
+					   AND ( r.deleted_at IS NULL OR r.deleted_at = '0000-00-00 00:00:00' )
+					 ORDER BY r.fecha ASC, r.id ASC, FIELD(d.dia_semana, 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo') ASC",
 					$fecha_desde
 				),
 				ARRAY_A
