@@ -1,3 +1,14 @@
 .env
 *.log
 _trash/
+
+# Debug scripts - nunca en commits ni releases (git archive solo empaqueta tracked)
+maffer-system/check-db.php
+maffer-system/fix-url.php
+maffer-system/setup-test.php
+maffer-system/test-relations.php
+test-db.php
+test-pw/
+
+# Zips de release (se generan con git archive - WO-018)
+releases/
