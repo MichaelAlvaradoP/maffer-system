@@ -160,9 +160,9 @@ if ( ! function_exists( 'maffer_ajax_submit_form' ) ) {
 
         // Guardar detalles (opciones de menú por día)
         foreach ( $menus_seleccionados as $dia => $menu_valor ) {
-            $partes      = explode( '##', $menu_valor, 2 );
-            $menu_titulo = trim( isset( $partes[0] ) ? $partes[0] : $menu_valor );
-            $menu_desc   = trim( isset( $partes[1] ) ? $partes[1] : '' );
+            $partes      = explode( '##', (string) $menu_valor, 2 );
+            $menu_titulo = sanitize_text_field( trim( isset( $partes[0] ) ? $partes[0] : $menu_valor ) );
+            $menu_desc   = sanitize_textarea_field( trim( isset( $partes[1] ) ? $partes[1] : '' ) );
             
             $wpdb->insert(
                 $tabla_detalles,

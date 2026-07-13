@@ -132,7 +132,7 @@ function maffer_v6_render() {
     if ( $t_exist ) {
         $tabla_d = $wpdb->prefix . 'maffer_registro_detalles';
         $total = (int) $wpdb->get_var( $wpdb->prepare(
-            "SELECT COUNT(*) FROM {$tabla} r LEFT JOIN {$tabla_d} d ON r.id = d.registro_id WHERE r.fecha >= %s AND (r.deleted_at IS NULL OR r.deleted_at = '0000-00-00 00:00:00')", $fecha_desde
+            "SELECT COUNT(DISTINCT r.id) FROM {$tabla} r LEFT JOIN {$tabla_d} d ON r.id = d.registro_id WHERE r.fecha >= %s AND (r.deleted_at IS NULL OR r.deleted_at = '0000-00-00 00:00:00')", $fecha_desde
         ) );
         $registros_raw = $wpdb->get_results( $wpdb->prepare(
             "SELECT r.id, r.fecha, r.hora, r.nombre, r.rut, r.observaciones, d.dia_semana, COALESCE(d.menu_titulo, r.menu_titulo) as menu_titulo 
@@ -157,10 +157,10 @@ function maffer_v6_render() {
         }
         $registros = array_values( $agrupados_r );
         $dist_raw  = $wpdb->get_results( $wpdb->prepare(
-            "SELECT COALESCE(d.menu_seleccionado, r.menu_titulo) as menu_titulo, COUNT(*) cnt FROM {$tabla} r 
-             LEFT JOIN {$tabla_d} d ON r.id = d.registro_id 
-             WHERE r.fecha >= %s AND (r.deleted_at IS NULL OR r.deleted_at = '0000-00-00 00:00:00') 
-             GROUP BY COALESCE(d.menu_seleccionado, r.menu_titulo) ORDER BY cnt DESC", $fecha_desde
+            "SELECT COALESCE(d.menu_titulo, r.menu_titulo) as menu_titulo, COUNT(*) cnt FROM {$tabla} r
+             LEFT JOIN {$tabla_d} d ON r.id = d.registro_id
+             WHERE r.fecha >= %s AND (r.deleted_at IS NULL OR r.deleted_at = '0000-00-00 00:00:00')
+             GROUP BY COALESCE(d.menu_titulo, r.menu_titulo) ORDER BY cnt DESC", $fecha_desde
         ), ARRAY_A );
         foreach ( $dist_raw as $d ) {
             $dist[ $d['menu_titulo'] ] = (int) $d['cnt'];
@@ -1293,8 +1293,13 @@ function maffer_v6_render() {
         // Opciones de menú cena (para poblar selects de modales)
         var MENUS_CENA = <?php
             $arr = array();
-            foreach ( $menus_cena as $m ) {
-                if ( trim( $m['title'] ) ) $arr[] = $m['title'];
+            foreach ( $menus_por_dia as $dia_menus ) {
+                foreach ( (array) $dia_menus as $m ) {
+                    $t = isset( $m['title'] ) ? trim( $m['title'] ) : '';
+                    if ( $t !== '' && ! in_array( $t, $arr, true ) ) {
+                        $arr[] = $t;
+                    }
+                }
             }
             echo json_encode( $arr );
         ?>;

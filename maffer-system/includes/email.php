@@ -42,7 +42,9 @@ if ( ! function_exists( 'maffer_html_correo' ) ) {
 	 * @return string Complete HTML document string.
 	 */
 	function maffer_html_correo( $rows, $rango_fmt ) {
-		$total = count( $rows );
+		// Total = personas registradas (1 registro por RUT por ciclo); el JOIN
+		// con detalles entrega una fila por dia, no una por registro.
+		$total = count( array_unique( array_column( $rows, 'rut' ) ) );
 		$dist  = array();
 
 		foreach ( $rows as $r ) {
