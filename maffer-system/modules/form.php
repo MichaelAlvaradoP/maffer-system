@@ -159,7 +159,12 @@ if ( ! function_exists( 'maffer_ajax_submit_form' ) ) {
         $registro_id = $wpdb->insert_id;
 
         // Guardar detalles (opciones de menú por día)
+        $dias_validos = array( 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo' );
         foreach ( $menus_seleccionados as $dia => $menu_valor ) {
+            // SEC-2: solo dias reales de la semana pueden generar detalles.
+            if ( ! in_array( sanitize_key( $dia ), $dias_validos, true ) ) {
+                continue;
+            }
             $partes      = explode( '##', (string) $menu_valor, 2 );
             $menu_titulo = sanitize_text_field( trim( isset( $partes[0] ) ? $partes[0] : $menu_valor ) );
             $menu_desc   = sanitize_textarea_field( trim( isset( $partes[1] ) ? $partes[1] : '' ) );
