@@ -79,6 +79,22 @@ if ( ! function_exists( 'maffer_ajax_submit_form' ) ) {
             wp_send_json_error( array( 'campo' => 'terminos', 'mensaje' => 'Debes aceptar las condiciones.' ) );
         }
 
+        // La selección semanal debe cubrir TODOS los días con servicio
+        // configurado — misma regla que aplica el formulario en el navegador.
+        $dias_validos = array( 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo' );
+        foreach ( $dias_validos as $dia_req ) {
+            $tiene_servicio = false;
+            foreach ( (array) get_option( "maffer_menu_cena_{$dia_req}", array() ) as $op ) {
+                if ( isset( $op['title'] ) && trim( $op['title'] ) !== '' ) {
+                    $tiene_servicio = true;
+                    break;
+                }
+            }
+            if ( $tiene_servicio && empty( $menus_seleccionados[ $dia_req ] ) ) {
+                wp_send_json_error( array( 'campo' => 'menu', 'mensaje' => 'Debes seleccionar un menú para todos los días.' ) );
+            }
+        }
+
         // Estado del sistema
         $estado = function_exists( 'maffer_obtener_estado_sistema' )
             ? maffer_obtener_estado_sistema()
@@ -159,7 +175,6 @@ if ( ! function_exists( 'maffer_ajax_submit_form' ) ) {
         $registro_id = $wpdb->insert_id;
 
         // Guardar detalles (opciones de menú por día)
-        $dias_validos = array( 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo' );
         foreach ( $menus_seleccionados as $dia => $menu_valor ) {
             // SEC-2: solo dias reales de la semana pueden generar detalles.
             if ( ! in_array( sanitize_key( $dia ), $dias_validos, true ) ) {
