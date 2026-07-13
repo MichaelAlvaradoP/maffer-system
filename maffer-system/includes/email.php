@@ -99,20 +99,6 @@ if ( ! function_exists( 'maffer_enviar_resumen' ) ) {
 	 *
 	 * @param string $asunto Email subject line.
 	 * @return bool True if email was sent successfully.
-	 *
-	 * ## Known Issue: remove_filter with anonymous closure
-	 *
-	 * The original snippet 155 uses an anonymous closure for
-	 * `add_filter('wp_mail_content_type', ...)` and then attempts
-	 * `remove_filter()` with a *new* anonymous closure instance.
-	 * Because PHP compares closures by instance (not by code),
-	 * the remove_filter call is a no-op — the filter remains in place.
-	 *
-	 * In practice, `wp_mail()` resets the content type internally for
-	 * each call, so the bug has not caused observable side effects.
-	 * It is left as-is for behavioral identity with the original.
-	 *
-	 * @see https://www.php.net/manual/en/function.spl-object-id.php
 	 */
 	function maffer_enviar_resumen( $asunto ) {
 		$tz      = new DateTimeZone( 'America/Santiago' );
@@ -167,14 +153,12 @@ if ( ! function_exists( 'maffer_enviar_resumen' ) ) {
 		}
 
 		$html = maffer_html_correo( $rows, $rango_fmt );
-		add_filter( 'wp_mail_content_type', function() { return 'text/html'; } );
-
-		/**
-		 * NOTE: The remove_filter below uses a new anonymous closure instance.
-		 * This does NOT remove the filter added above. See the docblock for details.
-		 */
+		// Misma instancia de closure en add/remove: PHP compara closures por
+		// instancia, dos closures nuevas nunca se des-registran (WO-017).
+		$content_type_html = function() { return 'text/html'; };
+		add_filter( 'wp_mail_content_type', $content_type_html );
 		$enviado = wp_mail( $dest, $asunto, $html, array( 'Content-Type: text/html; charset=UTF-8' ), array( $tmp_xlsx ) );
-		remove_filter( 'wp_mail_content_type', function() { return 'text/html'; } );
+		remove_filter( 'wp_mail_content_type', $content_type_html );
 
 		@unlink( $tmp_xlsx );
 
@@ -313,15 +297,11 @@ if ( ! function_exists( 'maffer_admin_enviar_correo_detalle' ) ) {
 		$asunto  = 'Resumen ciclo Maffer ' . $rango_fmt . ' — Servicio de Cena';
 		$headers = array( 'Content-Type: text/html; charset=UTF-8' );
 
-		add_filter( 'wp_mail_content_type', function () { return 'text/html'; } );
+		// Misma instancia de closure en add/remove (WO-017).
+		$content_type_html = function () { return 'text/html'; };
+		add_filter( 'wp_mail_content_type', $content_type_html );
 		$enviado = wp_mail( $dest, $asunto, $body, $headers, array( $tmp_xlsx ) );
-
-		/**
-		 * NOTE: The remove_filter below uses a new anonymous closure
-		 * instance. This does NOT remove the filter added above.
-		 * See maffer_enviar_resumen docblock for details.
-		 */
-		remove_filter( 'wp_mail_content_type', function () { return 'text/html'; } );
+		remove_filter( 'wp_mail_content_type', $content_type_html );
 
 		@unlink( $tmp_xlsx );
 

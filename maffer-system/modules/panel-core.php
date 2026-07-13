@@ -83,10 +83,18 @@ if ( ! function_exists( 'maffer_register_admin_menu' ) ) {
 	 * module (migrated from snippet 158).
 	 */
 	function maffer_register_admin_menu() {
+		// Los updates via PUC no re-ejecutan el activation hook, asi que el
+		// administrador podria no tener la capability todavia: otorgar aqui
+		// es idempotente (add_cap solo escribe si falta) (WO-017).
+		$admin_role = get_role( 'administrator' );
+		if ( $admin_role && ! $admin_role->has_cap( 'maffer_manage_menu' ) ) {
+			$admin_role->add_cap( 'maffer_manage_menu' );
+		}
+
 		add_menu_page(
 			'Panel Maffer',
 			'Panel Maffer',
-			'read',
+			'maffer_manage_menu',
 			'maffer-panel',
 			'maffer_v6_render',
 			'dashicons-food',
@@ -573,7 +581,7 @@ if ( ! function_exists( 'maffer_skip_logout_confirmation' ) ) {
 	 */
 	function maffer_skip_logout_confirmation( $action ) {
 		if ( 'log-out' === $action ) {
-			$redirect = isset( $_REQUEST['redirect_to'] ) ? $_REQUEST['redirect_to'] : home_url();
+			$redirect = isset( $_REQUEST['redirect_to'] ) ? esc_url_raw( wp_unslash( $_REQUEST['redirect_to'] ) ) : home_url();
 			wp_logout();
 			wp_safe_redirect( $redirect );
 			exit;

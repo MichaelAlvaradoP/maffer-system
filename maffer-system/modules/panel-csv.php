@@ -131,7 +131,7 @@ if ( ! function_exists( 'maffer_admin_descargar_excel' ) ) {
 			wp_die( 'Error al generar el archivo Excel.' );
 		}
 
-		$fname = 'registros-maffer-' . $rango_label . '.xlsx';
+		$fname = sanitize_file_name( 'registros-maffer-' . $rango_label . '.xlsx' );
 
 		header( 'Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' );
 		header( 'Content-Disposition: attachment; filename="' . $fname . '"' );

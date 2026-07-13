@@ -100,6 +100,13 @@ class Maffer_Activator {
                 'maffer_manage_menu' => true,
             )
         );
+
+        // El menu del panel exige maffer_manage_menu (WO-017): el
+        // administrador tambien la necesita.
+        $admin_role = get_role( 'administrator' );
+        if ( $admin_role ) {
+            $admin_role->add_cap( 'maffer_manage_menu' );
+        }
     }
 
     /**
