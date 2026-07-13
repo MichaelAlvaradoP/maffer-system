@@ -1,12 +1,20 @@
 # Maffer System
 
-**Version:** 1.0.0  
+**Version:** 1.1.0  
 **Requires:** WordPress 5.8+, PHP 7.4+  
 **License:** GPL v2 or later  
-**Repository:** [github.com/maffer/maffer-system](https://github.com/maffer/maffer-system)
+**Repository:** [github.com/MichaelAlvaradoP/maffer-system](https://github.com/MichaelAlvaradoP/maffer-system)
 
 Sistema de registro de alimentación para Hotel Maffer (Iquique, Chile).  
 Reemplaza los 9 snippets activos de WPCode por un plugin estructurado y modular.
+
+## v1.1.0 — Fase 2: Opciones diarias
+
+- El formulario público muestra los **7 días de la semana** (lunes-domingo), cada uno con sus opciones de cena; el huésped elige una opción por día y envía todo de una vez (se mantiene 1 registro por RUT por ciclo semanal).
+- Las opciones de menú se gestionan **por día** en el tab Menús (`wp_options`: `maffer_menu_cena_{lunes..domingo}`).
+- Nueva tabla `{prefix}maffer_registro_detalles` (registro_id, dia_semana, menu_titulo, menu_desc): guarda un **snapshot inmutable** de cada selección — editar o borrar opciones después no altera reservas existentes. `maffer_db_version` = 1.3.
+- Excel, correo detallado y panel muestran la selección por día; los registros de Fase 1 (menú único semanal) siguen visibles.
+- El menú de administración ahora exige la capability `maffer_manage_menu` (se otorga a `administrator` y a los roles gestores). Tras actualizar sin reactivar, la primera carga del panel la auto-otorga.
 
 ---
 
@@ -94,7 +102,10 @@ To fully roll back:
 
 ## Known Issues / Technical Debt
 
-- **`remove_filter` bug**: `remove_filter` with anonymous closure is documented but not functional (no-op).
 - **Legacy Compatibility**: `maffer_v6_procesar()` is kept as a POST fallback for compatibility.
-- **CSS/JS**: Currently inline; extraction to separate files is planned for Phase 2.
-- **Soft-delete**: Records are marked with `deleted_at` instead of physically deleted.
+- **CSS/JS**: Currently inline; extraction to separate files is pending.
+- **Soft-delete**: Records are marked with `deleted_at` instead of physically deleted (by design).
+- **Day completeness**: the requirement to pick a menu for every available day is enforced client-side only; the server accepts partial selections (pending product decision).
+- **Snapshot values**: detail rows store the title/description sent by the client (sanitized and escaped on output); they are not cross-checked against the configured options.
+
+Resolved in v1.1.0: `remove_filter` closure no-op (fixed), admin menu capability `read` → `maffer_manage_menu`, `redirect_to` sanitization, XLSX filename sanitization.
