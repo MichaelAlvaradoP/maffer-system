@@ -122,9 +122,16 @@ if ( ! function_exists( 'maffer_admin_descargar_excel' ) ) {
 			wp_die( 'Error: funcion maffer_generar_xlsx no disponible.' );
 		}
 
-		$rango_label = ( $fecha_desde === $hoy )
-			? $hoy
-			: $fecha_desde . '_a_' . $hoy;
+		// Trazabilidad: el nombre del archivo refleja el rango real descargado.
+		// fecha_hasta es exclusiva en la query; el label muestra el ultimo dia incluido.
+		if ( $fecha_hasta ) {
+			$hasta_incl  = date( 'Y-m-d', strtotime( $fecha_hasta . ' -1 day' ) );
+			$rango_label = $fecha_desde . '_a_' . $hasta_incl;
+		} else {
+			$rango_label = ( $fecha_desde === $hoy )
+				? $hoy
+				: $fecha_desde . '_a_' . $hoy;
+		}
 
 		$tmp = maffer_generar_xlsx( $rows, $rango_label );
 		if ( ! $tmp ) {

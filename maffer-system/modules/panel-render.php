@@ -639,7 +639,7 @@ function maffer_v6_render() {
                                     $mi_s = array_search( $sel['menu'], array_keys( $dist_ciclo ), true );
                                     $mc_s = $menu_colors[ ( $mi_s !== false ? $mi_s : 0 ) % count( $menu_colors ) ];
                                 ?>
-                                <span class="m6pll" style="padding-left:6px;padding-right:8px;font-size:11px"><i style="background:<?php echo esc_attr( $mc_s ); ?>;width:6px;height:6px;margin-right:4px"></i><strong style="text-transform:capitalize;margin-right:4px;color:var(--ink2)"><?php echo esc_html( substr( $sel['dia'], 0, 2 ) ); ?>:</strong><?php echo esc_html( $sel['menu'] ?: 'Sin titulo' ); ?></span>
+                                <span class="m6pll" style="padding-left:6px;padding-right:8px;font-size:11px"><i style="background:<?php echo esc_attr( $mc_s ); ?>;width:6px;height:6px;margin-right:4px"></i><strong style="text-transform:capitalize;margin-right:4px;color:var(--ink2)"><?php echo esc_html( 'Semana' === $sel['dia'] ? 'Semana' : substr( $sel['dia'], 0, 2 ) ); ?>:</strong><?php echo esc_html( $sel['menu'] ?: 'Sin titulo' ); ?></span>
                                 <?php endforeach; ?>
                             <?php else : ?>
                                 <span class="m6pll"><i style="background:#ccc"></i>Sin título</span>
@@ -1010,7 +1010,7 @@ function maffer_v6_render() {
                                         $mi_s = array_search( $sel['menu'], array_keys( $dist ), true );
                                         $mc_s = $menu_colors[ ( $mi_s !== false ? $mi_s : 0 ) % count( $menu_colors ) ];
                                     ?>
-                                    <span class="m6pll" style="padding-left:6px;padding-right:8px;font-size:11px"><i style="background:<?php echo esc_attr( $mc_s ); ?>;width:6px;height:6px;margin-right:4px"></i><strong style="text-transform:capitalize;margin-right:4px;color:var(--ink2)"><?php echo esc_html( substr( $sel['dia'], 0, 2 ) ); ?>:</strong><?php echo esc_html( $sel['menu'] ?: 'Sin titulo' ); ?></span>
+                                    <span class="m6pll" style="padding-left:6px;padding-right:8px;font-size:11px"><i style="background:<?php echo esc_attr( $mc_s ); ?>;width:6px;height:6px;margin-right:4px"></i><strong style="text-transform:capitalize;margin-right:4px;color:var(--ink2)"><?php echo esc_html( 'Semana' === $sel['dia'] ? 'Semana' : substr( $sel['dia'], 0, 2 ) ); ?>:</strong><?php echo esc_html( $sel['menu'] ?: 'Sin titulo' ); ?></span>
                                     <?php endforeach; ?>
                                 <?php else : ?>
                                     <span class="m6pll"><i style="background:#ccc"></i>Sin título</span>
