@@ -60,11 +60,14 @@ add_filter( 'cron_schedules', function ( $schedules ) {
 // ── Plugin Update Checker (GitHub Releases) ─────────────────────
 if ( file_exists( MAFFER_SYSTEM_DIR . 'vendor/plugin-update-checker/plugin-update-checker.php' ) ) {
     require_once MAFFER_SYSTEM_DIR . 'vendor/plugin-update-checker/plugin-update-checker.php';
-    \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
-        'https://github.com/maffer/maffer-system/',
+    $maffer_update_checker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
+        'https://github.com/MichaelAlvaradoP/maffer-system/',
         __FILE__,
         'maffer-system'
     );
+    // Descargar el zip adjunto al Release (estructura maffer-system/ limpia),
+    // no el zipball del codigo fuente que trae el repo completo.
+    $maffer_update_checker->getVcsApi()->enableReleaseAssets();
 }
 
 /*
