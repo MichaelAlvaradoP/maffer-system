@@ -1,27 +1,27 @@
 <?php
 /**
  * Plugin Name:       Maffer System
- * Plugin URI:        https://github.com/maffer/maffer-system
+ * Plugin URI:        https://github.com/MichaelAlvaradoP/maffer-system
  * Description:       Sistema de registro de alimentación para Hotel Maffer. Reemplaza los 9 snippets WPCode con una estructura modular.
- * Version:           1.0.0
+ * Version:           1.0.2
  * Requires PHP:      7.4
  * Requires WP:       5.8
  * Author:            Michael Alvarado
- * Author URI:        https://github.com/chest
+ * Author URI:        https://github.com/MichaelAlvaradoP
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * GitHub URI:        https://github.com/maffer/maffer-system
+ * GitHub URI:        https://github.com/MichaelAlvaradoP/maffer-system
  * Text Domain:       maffer-system
  *
  * @package   MafferSystem
- * @version   1.0.0
+ * @version   1.0.2
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'MAFFER_SYSTEM_VERSION', '1.0.0' );
+define( 'MAFFER_SYSTEM_VERSION', '1.0.2' );
 define( 'MAFFER_SYSTEM_DIR', plugin_dir_path( __FILE__ ) );
 
 // ── Includes ─────────────────────────────────────────────────────
@@ -60,11 +60,14 @@ add_filter( 'cron_schedules', function ( $schedules ) {
 // ── Plugin Update Checker (GitHub Releases) ─────────────────────
 if ( file_exists( MAFFER_SYSTEM_DIR . 'vendor/plugin-update-checker/plugin-update-checker.php' ) ) {
     require_once MAFFER_SYSTEM_DIR . 'vendor/plugin-update-checker/plugin-update-checker.php';
-    \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
-        'https://github.com/maffer/maffer-system/',
+    $maffer_update_checker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
+        'https://github.com/MichaelAlvaradoP/maffer-system/',
         __FILE__,
         'maffer-system'
     );
+    // Descargar el zip adjunto al Release (estructura maffer-system/ limpia),
+    // no el zipball del codigo fuente que trae el repo completo.
+    $maffer_update_checker->getVcsApi()->enableReleaseAssets();
 }
 
 /*
