@@ -10,7 +10,7 @@
  * Author URI:        https://github.com/MichaelAlvaradoP
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * GitHub URI:        https://github.com/maffer/maffer-system
+ * GitHub URI:        https://github.com/MichaelAlvaradoP/maffer-system
  * Text Domain:       maffer-system
  *
  * @package   MafferSystem
