@@ -1,6 +1,6 @@
 # Maffer System
 
-**Version:** 1.1.0  
+**Version:** 1.1.1  
 **Requires:** WordPress 5.8+, PHP 7.4+  
 **License:** GPL v2 or later  
 **Repository:** [github.com/MichaelAlvaradoP/maffer-system](https://github.com/MichaelAlvaradoP/maffer-system)

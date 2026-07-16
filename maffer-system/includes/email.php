@@ -45,41 +45,71 @@ if ( ! function_exists( 'maffer_html_correo' ) ) {
 		// Total = personas registradas (1 registro por RUT por ciclo); el JOIN
 		// con detalles entrega una fila por dia, no una por registro.
 		$total = count( array_unique( array_column( $rows, 'rut' ) ) );
-		$dist  = array();
 
+		// Distribucion menu -> cantidad, agrupada por dia de la semana.
+		// Filas sin dia_semana (registros Fase 1) van a "Semana completa".
+		$dias_orden = array( 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo' );
+		$dias_lbl   = array(
+			'lunes'     => 'Lunes',
+			'martes'    => 'Martes',
+			'miercoles' => 'Miércoles',
+			'jueves'    => 'Jueves',
+			'viernes'   => 'Viernes',
+			'sabado'    => 'Sábado',
+			'domingo'   => 'Domingo',
+		);
+		$por_dia = array();
 		foreach ( $rows as $r ) {
-			$t = ! empty( $r['menu_titulo'] ) ? $r['menu_titulo'] : 'Sin titulo';
-			$dist[ $t ] = isset( $dist[ $t ] ) ? $dist[ $t ] + 1 : 1;
+			$dia = isset( $r['dia_semana'] ) ? strtolower( (string) $r['dia_semana'] ) : '';
+			$key = in_array( $dia, $dias_orden, true ) ? $dia : '_semana';
+			$t   = ! empty( $r['menu_titulo'] ) ? $r['menu_titulo'] : 'Sin titulo';
+			if ( ! isset( $por_dia[ $key ][ $t ] ) ) {
+				$por_dia[ $key ][ $t ] = 0;
+			}
+			$por_dia[ $key ][ $t ]++;
 		}
+		$orden_final   = $dias_orden;
+		$orden_final[] = '_semana';
 
-		$filas_dist = '';
-		foreach ( $dist as $nm => $cnt ) {
-			$filas_dist .= '<tr>'
-				. '<td style="padding:10px 16px;border-bottom:1px solid #f0e8d8;color:#2a231a">' . esc_html( $nm ) . '</td>'
-				. '<td style="padding:10px 16px;border-bottom:1px solid #f0e8d8;text-align:center;font-weight:700;color:#E67E22;font-size:18px">' . intval( $cnt ) . '</td>'
-				. '</tr>';
+		$secciones = '';
+		foreach ( $orden_final as $key ) {
+			if ( empty( $por_dia[ $key ] ) ) {
+				continue;
+			}
+			$titulo_dia = '_semana' === $key ? 'Semana completa' : $dias_lbl[ $key ];
+			arsort( $por_dia[ $key ] );
+			$filas_dia = '';
+			foreach ( $por_dia[ $key ] as $nm => $cnt ) {
+				$filas_dia .= '<tr>'
+					. '<td style="padding:8px 16px;border-bottom:1px solid #f0e8d8;color:#2a231a">' . esc_html( $nm ) . '</td>'
+					. '<td style="padding:8px 16px;border-bottom:1px solid #f0e8d8;text-align:center;font-weight:700;color:#E67E22;font-size:16px;width:80px">' . intval( $cnt ) . '</td>'
+					. '</tr>';
+			}
+			$secciones .= '<table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;border:1px solid #e6d8bf;border-radius:10px;overflow:hidden;font-size:13px;margin-bottom:14px">'
+				. '<thead><tr style="background:#E67E22">'
+				. '<th colspan="2" style="padding:9px 16px;text-align:left;color:#fff;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.06em">' . esc_html( $titulo_dia ) . '</th>'
+				. '</tr>'
+				. '<tr style="background:#fbf3e4">'
+				. '<th style="padding:7px 16px;text-align:left;color:#97897a;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e6d8bf">Menú</th>'
+				. '<th style="padding:7px 16px;text-align:center;color:#97897a;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e6d8bf;width:80px">Cantidad</th>'
+				. '</tr></thead>'
+				. '<tbody>' . $filas_dia . '</tbody></table>';
 		}
 
 		return '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>'
 			. '<div style="font-family:Arial,sans-serif;font-size:13px;color:#2a231a;max-width:560px;margin:0 auto">'
 			. '<div style="background:#E67E22;padding:24px 28px;border-radius:12px 12px 0 0">'
 			. '<h1 style="margin:0;color:#fff;font-size:20px;font-weight:700">Servicio de Alimentacion Maffer</h1>'
-			. '<p style="margin:6px 0 0;color:rgba(255,255,255,.85);font-size:13px">Resumen del ciclo &mdash; Servicio de Cena</p>'
+			. '<p style="margin:6px 0 0;color:rgba(255,255,255,.85);font-size:13px">Menú semanal &mdash; Resumen del ciclo · Servicio de Cena</p>'
 			. '</div>'
 			. '<div style="background:#fffaf1;border:1px solid #e6d8bf;border-top:0;padding:24px 28px;border-radius:0 0 12px 12px">'
-			. '<p style="margin:0 0 20px;font-size:13px;color:#6b5d4c">Buen dia, se adjunta el detalle completo en el archivo Excel. Aqui el resumen del ciclo <strong>' . esc_html( $rango_fmt ) . '</strong>:</p>'
-			. '<table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;border:1px solid #e6d8bf;border-radius:10px;overflow:hidden;font-size:13px;margin-bottom:20px">'
-			. '<thead><tr style="background:#fbf3e4">'
-			. '<th style="padding:10px 16px;text-align:left;color:#97897a;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e6d8bf">Menu</th>'
-			. '<th style="padding:10px 16px;text-align:center;color:#97897a;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e6d8bf">Cantidad</th>'
-			. '</tr></thead>'
-			. '<tbody>'
-			. $filas_dist
-			. '<tr style="background:#fff8f0">'
-			. '<td style="padding:12px 16px;font-weight:700;color:#2a231a;border-top:2px solid #e6d8bf">Total registros</td>'
-			. '<td style="padding:12px 16px;text-align:center;font-weight:800;color:#E67E22;font-size:22px;border-top:2px solid #e6d8bf">' . intval( $total ) . '</td>'
-			. '</tr>'
-			. '</tbody></table>'
+			. '<p style="margin:0 0 16px;font-size:13px;color:#6b5d4c">Buen dia, se adjunta el detalle completo en el archivo Excel. Resumen del ciclo <strong>' . esc_html( $rango_fmt ) . '</strong>, pedidos de cena por día:</p>'
+			. '<table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;margin-bottom:18px">'
+			. '<tr>'
+			. '<td style="background:#fff8f0;border:1px solid #e6d8bf;border-radius:10px;padding:14px 16px;font-weight:700;color:#2a231a">Personas registradas esta semana</td>'
+			. '<td style="background:#fff8f0;border:1px solid #e6d8bf;border-left:0;border-radius:10px;padding:14px 16px;text-align:center;font-weight:800;color:#E67E22;font-size:26px;width:80px">' . intval( $total ) . '</td>'
+			. '</tr></table>'
+			. $secciones
 			. '<p style="margin:0;color:#97897a;font-size:11px;border-top:1px solid #e6d8bf;padding-top:16px">Sistema de Alimentacion Maffer &mdash; ' . esc_html( $rango_fmt ) . '</p>'
 			. '</div></div></body></html>';
 	}
@@ -233,7 +263,8 @@ if ( ! function_exists( 'maffer_admin_enviar_correo_detalle' ) ) {
 			ARRAY_A
 		);
 
-		$total = count( $rows );
+		// Total = personas (el JOIN entrega una fila por dia seleccionado).
+		$total = count( array_unique( array_column( $rows, 'rut' ) ) );
 		$dest  = get_option( 'maffer_correo_destino', get_option( 'admin_email' ) );
 
 		// ── Generate XLSX ─────────────────────────────────────
@@ -248,42 +279,70 @@ if ( ! function_exists( 'maffer_admin_enviar_correo_detalle' ) ) {
 			exit;
 		}
 
-		// ── Build DETAILED HTML table (row-by-row) ────────────
-		$filas_html = '';
+		// ── Build DETAILED HTML table grouped by day ──────────
+		$dias_orden = array( 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo' );
+		$dias_lbl   = array(
+			'lunes'     => 'Lunes',
+			'martes'    => 'Martes',
+			'miercoles' => 'Miércoles',
+			'jueves'    => 'Jueves',
+			'viernes'   => 'Viernes',
+			'sabado'    => 'Sábado',
+			'domingo'   => 'Domingo',
+		);
+		$grupos = array();
 		foreach ( $rows as $r ) {
-			$fecha_fila = ! empty( $r['fecha'] )
-				? date( 'd/m/Y', strtotime( $r['fecha'] ) )
-				: '—';
-			$dia_fila = ! empty( $r['dia_semana'] ) ? ucfirst( $r['dia_semana'] ) : '—';
-			$filas_html .= '<tr>'
-				. '<td style="padding:6px 10px;border-bottom:1px solid #f0e8d8">'
-					. esc_html( $r['nombre'] ) . '</td>'
-				. '<td style="padding:6px 10px;border-bottom:1px solid #f0e8d8;font-family:monospace">'
-					. esc_html( $r['rut'] ) . '</td>'
-				. '<td style="padding:6px 10px;border-bottom:1px solid #f0e8d8">'
-					. esc_html( $dia_fila ) . '</td>'
-				. '<td style="padding:6px 10px;border-bottom:1px solid #f0e8d8">'
-					. esc_html( $r['menu_titulo'] ) . '</td>'
-				. '<td style="padding:6px 10px;border-bottom:1px solid #f0e8d8;text-align:center">'
-					. esc_html( $fecha_fila ) . '</td>'
-				. '<td style="padding:6px 10px;border-bottom:1px solid #f0e8d8;text-align:center">'
-					. esc_html( substr( $r['hora'], 0, 5 ) ) . '</td>'
-				. '</tr>';
+			$dia = isset( $r['dia_semana'] ) ? strtolower( (string) $r['dia_semana'] ) : '';
+			$key = in_array( $dia, $dias_orden, true ) ? $dia : '_semana';
+			$grupos[ $key ][] = $r;
+		}
+		$orden_final   = $dias_orden;
+		$orden_final[] = '_semana';
+
+		$filas_html = '';
+		foreach ( $orden_final as $key ) {
+			if ( empty( $grupos[ $key ] ) ) {
+				continue;
+			}
+			$titulo_dia = '_semana' === $key ? 'Semana completa' : $dias_lbl[ $key ];
+			$filas_html .= '<tr><td colspan="5" style="padding:8px 10px;background:#fbf3e4;border-bottom:1px solid #e6d8bf;font-weight:700;color:#b95e0a;text-transform:uppercase;letter-spacing:.05em;font-size:12px">'
+				. esc_html( $titulo_dia ) . '</td></tr>';
+			// Mismo menu junto: ordenar por menu y luego nombre dentro del dia.
+			usort( $grupos[ $key ], function ( $a, $b ) {
+				$c = strcasecmp( (string) $a['menu_titulo'], (string) $b['menu_titulo'] );
+				return 0 !== $c ? $c : strcasecmp( (string) $a['nombre'], (string) $b['nombre'] );
+			} );
+			foreach ( $grupos[ $key ] as $r ) {
+				$fecha_fila = ! empty( $r['fecha'] )
+					? date( 'd/m/Y', strtotime( $r['fecha'] ) )
+					: '—';
+				$filas_html .= '<tr>'
+					. '<td style="padding:6px 10px;border-bottom:1px solid #f0e8d8">'
+						. esc_html( $r['nombre'] ) . '</td>'
+					. '<td style="padding:6px 10px;border-bottom:1px solid #f0e8d8;font-family:monospace">'
+						. esc_html( $r['rut'] ) . '</td>'
+					. '<td style="padding:6px 10px;border-bottom:1px solid #f0e8d8">'
+						. esc_html( $r['menu_titulo'] ) . '</td>'
+					. '<td style="padding:6px 10px;border-bottom:1px solid #f0e8d8;text-align:center">'
+						. esc_html( $fecha_fila ) . '</td>'
+					. '<td style="padding:6px 10px;border-bottom:1px solid #f0e8d8;text-align:center">'
+						. esc_html( substr( $r['hora'], 0, 5 ) ) . '</td>'
+					. '</tr>';
+			}
 		}
 
 		$body = '<div style="font-family:Arial,sans-serif;font-size:13px;color:#333;max-width:680px">'
 			. '<div style="background:#E67E22;padding:20px 24px;border-radius:10px 10px 0 0">'
 			. '<h2 style="margin:0;color:#fff;font-size:18px">Servicio de Alimentación Maffer</h2>'
-			. '<p style="margin:4px 0 0;color:rgba(255,255,255,.85);font-size:12px">Resumen del ciclo — Cena</p>'
+			. '<p style="margin:4px 0 0;color:rgba(255,255,255,.85);font-size:12px">Menú semanal — Detalle del ciclo · Cena</p>'
 			. '</div>'
 			. '<div style="background:#fffaf1;border:1px solid #e6d8bf;border-top:0;padding:20px 24px;border-radius:0 0 10px 10px">'
 			. '<p style="margin:0 0 14px">Hola,</p>'
-			. '<p style="margin:0 0 16px">Adjunto el resumen de <strong>' . intval( $total ) . ' registros</strong> del ciclo <strong>' . esc_html( $rango_fmt ) . '</strong>.</p>'
+			. '<p style="margin:0 0 16px">Adjunto el detalle de <strong>' . intval( $total ) . ' personas registradas</strong> en el ciclo <strong>' . esc_html( $rango_fmt ) . '</strong>, agrupado por día:</p>'
 			. '<table cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%;font-size:13px;border:1px solid #e6d8bf;border-radius:8px;overflow:hidden;margin-bottom:16px">'
 			. '<thead><tr style="background:#E67E22;color:#fff">'
 			. '<th style="padding:10px 10px;text-align:left">Nombre</th>'
 			. '<th style="padding:10px 10px;text-align:left">RUT</th>'
-			. '<th style="padding:10px 10px;text-align:left">Día</th>'
 			. '<th style="padding:10px 10px;text-align:left">Menú</th>'
 			. '<th style="padding:10px 10px;text-align:center">Fecha</th>'
 			. '<th style="padding:10px 10px;text-align:center">Hora</th>'

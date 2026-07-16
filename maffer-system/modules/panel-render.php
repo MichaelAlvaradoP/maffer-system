@@ -633,13 +633,13 @@ function maffer_v6_render() {
                     <td class="m6nm"><?php echo esc_html( $reg['nombre'] ); ?></td>
                     <td class="m6mn m6mt"><?php echo esc_html( $reg['rut'] ); ?></td>
                     <td>
-                        <div style="display:flex;gap:4px;flex-wrap:wrap">
+                        <div style="display:grid;grid-template-columns:repeat(2,minmax(140px,1fr));gap:3px 6px;max-width:400px">
                             <?php if ( ! empty( $reg['selecciones'] ) ) : ?>
                                 <?php foreach ( $reg['selecciones'] as $sel ) : 
                                     $mi_s = array_search( $sel['menu'], array_keys( $dist_ciclo ), true );
                                     $mc_s = $menu_colors[ ( $mi_s !== false ? $mi_s : 0 ) % count( $menu_colors ) ];
                                 ?>
-                                <span class="m6pll" style="padding-left:6px;padding-right:8px;font-size:11px"><i style="background:<?php echo esc_attr( $mc_s ); ?>;width:6px;height:6px;margin-right:4px"></i><strong style="text-transform:capitalize;margin-right:4px;color:var(--ink2)"><?php echo esc_html( 'Semana' === $sel['dia'] ? 'Semana' : substr( $sel['dia'], 0, 2 ) ); ?>:</strong><?php echo esc_html( $sel['menu'] ?: 'Sin titulo' ); ?></span>
+                                <span class="m6pll" style="padding:3px 8px 3px 7px;font-size:11px;gap:5px;border-radius:8px;min-width:0"><i style="background:<?php echo esc_attr( $mc_s ); ?>;width:6px;height:6px"></i><strong style="text-transform:capitalize;color:var(--ink2);flex:0 0 auto;min-width:22px"><?php echo esc_html( 'Semana' === $sel['dia'] ? 'Semana' : substr( $sel['dia'], 0, 2 ) ); ?>:</strong><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0" title="<?php echo esc_attr( $sel['menu'] ?: 'Sin titulo' ); ?>"><?php echo esc_html( $sel['menu'] ?: 'Sin titulo' ); ?></span></span>
                                 <?php endforeach; ?>
                             <?php else : ?>
                                 <span class="m6pll"><i style="background:#ccc"></i>Sin título</span>
@@ -1004,13 +1004,13 @@ function maffer_v6_render() {
                         <td class="m6nm"><?php echo esc_html( $reg['nombre'] ); ?></td>
                         <td class="m6mn m6mt"><?php echo esc_html( $reg['rut'] ); ?></td>
                         <td>
-                            <div style="display:flex;gap:4px;flex-wrap:wrap">
+                            <div style="display:grid;grid-template-columns:repeat(2,minmax(140px,1fr));gap:3px 6px;max-width:400px">
                                 <?php if ( ! empty( $reg['selecciones'] ) ) : ?>
                                     <?php foreach ( $reg['selecciones'] as $sel ) : 
                                         $mi_s = array_search( $sel['menu'], array_keys( $dist ), true );
                                         $mc_s = $menu_colors[ ( $mi_s !== false ? $mi_s : 0 ) % count( $menu_colors ) ];
                                     ?>
-                                    <span class="m6pll" style="padding-left:6px;padding-right:8px;font-size:11px"><i style="background:<?php echo esc_attr( $mc_s ); ?>;width:6px;height:6px;margin-right:4px"></i><strong style="text-transform:capitalize;margin-right:4px;color:var(--ink2)"><?php echo esc_html( 'Semana' === $sel['dia'] ? 'Semana' : substr( $sel['dia'], 0, 2 ) ); ?>:</strong><?php echo esc_html( $sel['menu'] ?: 'Sin titulo' ); ?></span>
+                                    <span class="m6pll" style="padding:3px 8px 3px 7px;font-size:11px;gap:5px;border-radius:8px;min-width:0"><i style="background:<?php echo esc_attr( $mc_s ); ?>;width:6px;height:6px"></i><strong style="text-transform:capitalize;color:var(--ink2);flex:0 0 auto;min-width:22px"><?php echo esc_html( 'Semana' === $sel['dia'] ? 'Semana' : substr( $sel['dia'], 0, 2 ) ); ?>:</strong><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0" title="<?php echo esc_attr( $sel['menu'] ?: 'Sin titulo' ); ?>"><?php echo esc_html( $sel['menu'] ?: 'Sin titulo' ); ?></span></span>
                                     <?php endforeach; ?>
                                 <?php else : ?>
                                     <span class="m6pll"><i style="background:#ccc"></i>Sin título</span>

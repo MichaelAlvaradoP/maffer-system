@@ -3,7 +3,7 @@
  * Plugin Name:       Sistema Maffer
  * Plugin URI:        https://servicioalimentacionmaffer.cl
  * Description:       Sistema de registro y reserva de alimentación (cenas) para colaboradores. Modulo centralizado y modular migrado desde WPCode.
- * Version:           1.1.0
+ * Version:           1.1.1
  * Requires PHP:      7.4
  * Requires WP:       5.8
  * Author:            Michael Alvarado
@@ -14,14 +14,14 @@
  * Text Domain:       maffer-system
  *
  * @package   MafferSystem
- * @version   1.1.0
+ * @version   1.1.1
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'MAFFER_SYSTEM_VERSION', '1.1.0' );
+define( 'MAFFER_SYSTEM_VERSION', '1.1.1' );
 define( 'MAFFER_SYSTEM_DIR', plugin_dir_path( __FILE__ ) );
 
 // ── Includes ─────────────────────────────────────────────────────
